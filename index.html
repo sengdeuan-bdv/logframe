@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Dashboard</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --light: #ecf0f1; }
+        body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f7f6; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        /* Tabs */
+        .tabs { display: flex; border-bottom: 2px solid var(--light); margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: none; font-weight: bold; color: var(--primary); }
+        .tab-btn.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
+        
+        /* Content */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: var(--light); }
+        .total-row { font-weight: bold; background: #e8f6f3; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Project Management Dashboard</h2>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('logframe')">Logframe</button>
+        <button class="tab-btn" onclick="openTab('workplan')">Workplan</button>
+        <button class="tab-btn" onclick="openTab('budget')">Budget</button>
+        <button class="tab-btn" onclick="openTab('indicators')">Indicators</button>
+    </div>
+
+    <div id="logframe" class="tab-content active">
+        <h3>Logical Framework</h3>
+        <table>
+            <tr><th>Level</th><th>Narrative</th><th>Indicators</th><th>Assumptions</th></tr>
+            <tr><td>Goal</td><td>Impact statement here</td><td>Key metric</td><td>Stability</td></tr>
+            <tr><td>Outcome</td><td>Change in behavior/status</td><td>% Achieved</td><td>Stakeholder buy-in</td></tr>
+        </table>
+    </div>
+
+    <div id="workplan" class="tab-content">
+        <h3>Workplan</h3>
+        <table>
+            <tr><th>Task</th><th>Owner</th><th>Month 1</th><th>Month 2</th><th>Status</th></tr>
+            <tr><td>Project Launch</td><td>Manager</td><td>X</td><td>-</td><td>Completed</td></tr>
+            <tr><td>Data Collection</td><td>Team A</td><td>-</td><td>X</td><td>In Progress</td></tr>
+        </table>
+    </div>
+
+    <div id="budget" class="tab-content">
+        <h3>Budget Overview</h3>
+        <table>
+            <tr><th>Item</th><th>Unit Cost</th><th>Qty</th><th>Total</th></tr>
+            <tr><td>Equipment</td><td>500</td><td>2</td><td>1000</td></tr>
+            <tr><td>Travel</td><td>200</td><td>5</td><td>1000</td></tr>
+            <tr class="total-row"><td>Total</td><td colspan="2"></td><td>2000</td></tr>
+        </table>
+    </div>
+
+    <div id="indicators" class="tab-content">
+        <h3>Indicator Tracking</h3>
+        <table>
+            <tr><th>Indicator</th><th>Target</th><th>Actual</th><th>Status</th></tr>
+            <tr><td>Beneficiaries Reached</td><td>100</td><td>85</td><td>On Track</td></tr>
+            <tr><td>Training Sessions</td><td>10</td><td>2</td><td>Delayed</td></tr>
+        </table>
+    </div>
+</div>
+
+<script>
+    function openTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+</script>
+
+</body>
+</html>
