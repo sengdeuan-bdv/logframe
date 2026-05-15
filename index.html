@@ -1,88 +1,435 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lo">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Management Dashboard</title>
+    <title>Pre/Post Test Dashboard Analysis</title>
+    <!-- Tailwind CSS ສຳລັບການອອກແບບ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS ສຳລັບອ່ານໄຟລ໌ Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Chart.js ສຳລັບສ້າງກຣາຟ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- ChartDataLabels plugin ສຳລັບສະແດງຕົວເລກເທິງກຣາຟ -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --light: #ecf0f1; }
-        body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f7f6; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        
-        /* Tabs */
-        .tabs { display: flex; border-bottom: 2px solid var(--light); margin-bottom: 20px; }
-        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: none; font-weight: bold; color: var(--primary); }
-        .tab-btn.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
-        
-        /* Content */
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
-        /* Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: var(--light); }
-        .total-row { font-weight: bold; background: #e8f6f3; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Noto Sans Lao', sans-serif;
+            background-color: #f3f4f6;
+        }
     </style>
 </head>
-<body>
+<body class="text-gray-800">
 
-<div class="container">
-    <h2>Project Management Dashboard</h2>
-    
-    <div class="tabs">
-        <button class="tab-btn active" onclick="openTab('logframe')">Logframe</button>
-        <button class="tab-btn" onclick="openTab('workplan')">Workplan</button>
-        <button class="tab-btn" onclick="openTab('budget')">Budget</button>
-        <button class="tab-btn" onclick="openTab('indicators')">Indicators</button>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Header -->
+        <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">ບົດລາຍງານວິເຄາະຄະແນນ Pre-test & Post-test</h1>
+                <p class="mt-2 text-sm text-gray-600">ອັບໂຫຼດໄຟລ໌ Excel ຂອງທ່ານເພື່ອເບິ່ງການປຽບທຽບຄະແນນກ່ອນ ແລະ ຫຼັງການຝຶກອົບຮົມ</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-3">
+                <button onclick="loadSampleData()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md shadow-sm text-sm font-medium transition-colors">
+                    ທົດລອງໃຊ້ຂໍ້ມູນຕົວຢ່າງ
+                </button>
+                <label class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-sm font-medium cursor-pointer transition-colors">
+                    ອັບໂຫຼດໄຟລ໌ Excel
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden">
+                </label>
+            </div>
+        </div>
+
+        <!-- ຂໍ້ຄວາມເຕືອນເມື່ອຍັງບໍ່ມີຂໍ້ມູນ -->
+        <div id="emptyState" class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="mt-2 text-lg font-medium text-gray-900">ຍັງບໍ່ມີຂໍ້ມູນ</h3>
+            <p class="mt-1 text-sm text-gray-500">ກະລຸນາອັບໂຫຼດໄຟລ໌ Excel ເພື່ອເລີ່ມຕົ້ນການວິເຄາະ.</p>
+        </div>
+
+        <!-- Dashboard Content (ເຊື່ອງໄວ້ຈົນກວ່າຈະມີຂໍ້ມູນ) -->
+        <div id="dashboardContent" class="hidden space-y-6">
+            
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">ຈຳນວນຜູ້ເຂົ້າຮ່ວມທັງໝົດ</dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900" id="totalParticipants">0</div>
+                                        <div class="ml-2 text-sm text-gray-500">ຄົນ</div>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
+                                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">ຄະແນນສະເລ່ຍ Pre-test</dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900" id="avgPreScore">0</div>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                                <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">ຄະແນນສະເລ່ຍ Post-test</dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900" id="avgPostScore">0</div>
+                                        <div class="ml-2 text-sm font-medium text-green-600" id="scoreImprovement">
+                                            +0%
+                                        </div>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="bg-white shadow-sm rounded-xl border border-gray-200 p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">ປຽບທຽບຄະແນນສະເລ່ຍ ແບ່ງຕາມຕຳແໜ່ງ</h3>
+                <div class="relative h-80 w-full">
+                    <canvas id="positionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Table Section -->
+            <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+                <div class="px-6 py-5 border-b border-gray-200">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">ຕາຕະລາງປຽບທຽບຄະແນນລາຍບຸກຄົນ</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ລຳດັບ</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ຊື່ ແລະ ນາມສະກຸນ</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ຕຳແໜ່ງ</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pre-test</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Post-test</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ການປ່ຽນແປງ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Data rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <div id="logframe" class="tab-content active">
-        <h3>Logical Framework</h3>
-        <table>
-            <tr><th>Level</th><th>Narrative</th><th>Indicators</th><th>Assumptions</th></tr>
-            <tr><td>Goal</td><td>Impact statement here</td><td>Key metric</td><td>Stability</td></tr>
-            <tr><td>Outcome</td><td>Change in behavior/status</td><td>% Achieved</td><td>Stakeholder buy-in</td></tr>
-        </table>
-    </div>
+    <script>
+        let myChart = null;
 
-    <div id="workplan" class="tab-content">
-        <h3>Workplan</h3>
-        <table>
-            <tr><th>Task</th><th>Owner</th><th>Month 1</th><th>Month 2</th><th>Status</th></tr>
-            <tr><td>Project Launch</td><td>Manager</td><td>X</td><td>-</td><td>Completed</td></tr>
-            <tr><td>Data Collection</td><td>Team A</td><td>-</td><td>X</td><td>In Progress</td></tr>
-        </table>
-    </div>
+        // ຟັງຊັນສຳລັບແຍກເອົາສະເພາະຕົວເລກທາງໜ້າຂອງເຄື່ອງໝາຍ "/"
+        function parseScore(scoreStr) {
+            if (scoreStr === undefined || scoreStr === null || scoreStr === '') return null;
+            const str = String(scoreStr).trim();
+            const parts = str.split('/'); // ແຍກດ້ວຍເຄື່ອງໝາຍ /
+            const num = parseFloat(parts[0]); // ເອົາໂຕເລກທາງໜ້າ
+            return isNaN(num) ? null : num;
+        }
 
-    <div id="budget" class="tab-content">
-        <h3>Budget Overview</h3>
-        <table>
-            <tr><th>Item</th><th>Unit Cost</th><th>Qty</th><th>Total</th></tr>
-            <tr><td>Equipment</td><td>500</td><td>2</td><td>1000</td></tr>
-            <tr><td>Travel</td><td>200</td><td>5</td><td>1000</td></tr>
-            <tr class="total-row"><td>Total</td><td colspan="2"></td><td>2000</td></tr>
-        </table>
-    </div>
+        // ຟັງຊັນຊອກຫາຊື່ Column ທີ່ຖືກຕ້ອງ ໂດຍບໍ່ສົນໃຈຍະຫວ່າງ ຫຼື ຕົວພິມໃຫຍ່-ນ້ອຍ
+        function findColumnKey(keys, searchTerms) {
+            for (let key of keys) {
+                const lowerKey = key.toLowerCase().replace(/\s+/g, '');
+                for (let term of searchTerms) {
+                    if (lowerKey.includes(term.toLowerCase().replace(/\s+/g, ''))) {
+                        return key;
+                    }
+                }
+            }
+            return null;
+        }
 
-    <div id="indicators" class="tab-content">
-        <h3>Indicator Tracking</h3>
-        <table>
-            <tr><th>Indicator</th><th>Target</th><th>Actual</th><th>Status</th></tr>
-            <tr><td>Beneficiaries Reached</td><td>100</td><td>85</td><td>On Track</td></tr>
-            <tr><td>Training Sessions</td><td>10</td><td>2</td><td>Delayed</td></tr>
-        </table>
-    </div>
-</div>
+        document.getElementById('excelFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-<script>
-    function openTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
-    }
-</script>
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    // ເອົາຂໍ້ມູນຈາກ Sheet ທຳອິດ
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // ແປງເປັນ JSON
+                    const json = XLSX.utils.sheet_to_json(worksheet, {defval: ""});
+                    processData(json);
+                } catch (error) {
+                    alert("ເກີດຂໍ້ຜິດພາດໃນການອ່ານໄຟລ໌ Excel: " + error.message);
+                }
+            };
+            
+            // ອ່ານໄຟລ໌ໃນຮູບແບບ ArrayBuffer
+            reader.readAsArrayBuffer(file);
+        });
 
+        function loadSampleData() {
+            const sampleData = [
+                {"Score pretest ": "6/10", "score post test ": "9/10", "ຊື່ ແລະ ນາມສະກຸນ": "ນາງ ພູສະຫວາດ", "ຕຳແໜ່ງ": "ໝໍ"},
+                {"Score pretest ": "4/10", "score post test ": "8/10", "ຊື່ ແລະ ນາມສະກຸນ": "ທ້າວ ສົມຊາຍ", "ຕຳແໜ່ງ": "ພະຍາບານ"},
+                {"Score pretest ": "5", "score post test ": "7", "ຊື່ ແລະ ນາມສະກຸນ": "ນາງ ມະນີວັນ", "ຕຳແໜ່ງ": "ຜະດຸງຄັນ"},
+                {"Score pretest ": "3/10", "score post test ": "8/10", "ຊື່ ແລະ ນາມສະກຸນ": "ນາງ ດາວວີ", "ຕຳແໜ່ງ": "ພະຍາບານ"},
+                {"Score pretest ": "7/10", "score post test ": "10/10", "ຊື່ ແລະ ນາມສະກຸນ": "ທ້າວ ຄຳຫຼ້າ", "ຕຳແໜ່ງ": "ໝໍ"},
+                {"Score pretest ": "5/10", "score post test ": "9/10", "ຊື່ ແລະ ນາມສະກຸນ": "ນາງ ວັນເພັງ", "ຕຳແໜ່ງ": "ຜະດຸງຄັນ"}
+            ];
+            
+            processData(sampleData);
+        }
+
+        function processData(data) {
+            if (data.length === 0) {
+                alert("ບໍ່ມີຂໍ້ມູນໃນໄຟລ໌ນີ້");
+                return;
+            }
+
+            const keys = Object.keys(data[0]);
+            
+            // ຄົ້ນຫາຖັນທີ່ຕ້ອງການ
+            const preKey = findColumnKey(keys, ['scorepretest', 'pretest', 'scorepre']);
+            const postKey = findColumnKey(keys, ['scoreposttest', 'posttest', 'scorepost']);
+            const nameKey = findColumnKey(keys, ['ຊື່ແລະນາມສະກຸນ', 'ຊື່', 'name']);
+            const positionKey = findColumnKey(keys, ['ຕຳແໜ່ງ', 'position', 'role', 'ຕໍາແໜ່ງ']);
+
+            if (!preKey || !postKey) {
+                alert("ບໍ່ພົບຖັນ 'Score pretest' ຫຼື 'Score post test' ໃນໄຟລ໌ຂອງທ່ານ. ກະລຸນາກວດສອບໄຟລ໌ CSV ອີກຄັ້ງ.");
+                return;
+            }
+
+            let validCount = 0;
+            let totalPre = 0;
+            let totalPost = 0;
+            let positions = {};
+            let individualData = [];
+
+            data.forEach((row, index) => {
+                const preScore = parseScore(row[preKey]);
+                const postScore = parseScore(row[postKey]);
+                
+                // ຖ້າບໍ່ມີຄະແນນໃຫ້ຂ້າມແຖວນັ້ນ
+                if (preScore === null && postScore === null) return;
+                
+                const safePre = preScore || 0;
+                const safePost = postScore || 0;
+                const name = row[nameKey] || `ບຸກຄົນທີ່ ${index + 1}`;
+                const position = row[positionKey] || 'ບໍ່ລະບຸຕຳແໜ່ງ';
+
+                validCount++;
+                totalPre += safePre;
+                totalPost += safePost;
+
+                // ເກັບຂໍ້ມູນລາຍບຸກຄົນສຳລັບຕາຕະລາງ
+                individualData.push({
+                    name: name,
+                    position: position,
+                    pre: safePre,
+                    post: safePost,
+                    diff: safePost - safePre
+                });
+
+                // ຈັດກຸ່ມຂໍ້ມູນຕາມຕຳແໜ່ງ
+                if (!positions[position]) {
+                    positions[position] = { preSum: 0, postSum: 0, count: 0 };
+                }
+                positions[position].preSum += safePre;
+                positions[position].postSum += safePost;
+                positions[position].count += 1;
+            });
+
+            if (validCount === 0) {
+                alert("ບໍ່ພົບຂໍ້ມູນຄະແນນທີ່ສາມາດອ່ານໄດ້");
+                return;
+            }
+
+            const avgPre = (totalPre / validCount).toFixed(2);
+            const avgPost = (totalPost / validCount).toFixed(2);
+            let improvement = 0;
+            if (avgPre > 0) {
+                improvement = (((avgPost - avgPre) / avgPre) * 100).toFixed(1);
+            }
+
+            // ສະແດງຜົນໃນ UI
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('dashboardContent').classList.remove('hidden');
+
+            document.getElementById('totalParticipants').textContent = validCount;
+            document.getElementById('avgPreScore').textContent = avgPre;
+            document.getElementById('avgPostScore').textContent = avgPost;
+            
+            const impEl = document.getElementById('scoreImprovement');
+            if (improvement >= 0) {
+                impEl.textContent = `+${improvement}%`;
+                impEl.className = "ml-2 text-sm font-medium text-green-600";
+            } else {
+                impEl.textContent = `${improvement}%`;
+                impEl.className = "ml-2 text-sm font-medium text-red-600";
+            }
+
+            renderChart(positions);
+            renderTable(individualData);
+        }
+
+        // ລົງທະບຽນ Plugin DataLabels ໃຫ້ Chart.js ຮັບຮູ້
+        Chart.register(ChartDataLabels);
+
+        function renderChart(positions) {
+            const ctx = document.getElementById('positionChart').getContext('2d');
+            
+            // ຖ້າເຄີຍມີ Chart ແລ້ວ ໃຫ້ລຶບຂອງເກົ່າຖິ້ມກ່ອນ
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            const labels = Object.keys(positions);
+            const preData = labels.map(pos => (positions[pos].preSum / positions[pos].count).toFixed(2));
+            const postData = labels.map(pos => (positions[pos].postSum / positions[pos].count).toFixed(2));
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'ຄະແນນສະເລ່ຍ Pre-test',
+                            data: preData,
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)', // Red
+                            borderColor: 'rgb(239, 68, 68)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'ຄະແນນສະເລ່ຍ Post-test',
+                            data: postData,
+                            backgroundColor: 'rgba(34, 197, 94, 0.7)', // Green
+                            borderColor: 'rgb(34, 197, 94)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 25 // ເພີ່ມຍະຫວ່າງດ້ານເທິງກຣາຟເພື່ອບໍ່ໃຫ້ຕົວເລກຖືກຕັດ
+                        }
+                    },
+                    plugins: {
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#374151',
+                            font: {
+                                family: "'Noto Sans Lao', sans-serif",
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function(value) {
+                                // ສະແດງຕົວເລກ. ຖ້າຢາກໃຫ້ມີເຄື່ອງໝາຍ % ຕໍ່ທ້າຍສາມາດປ່ຽນເປັນ: return value + '%';
+                                return value; 
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { family: "'Noto Sans Lao', sans-serif" }
+                            }
+                        },
+                        tooltip: {
+                            titleFont: { family: "'Noto Sans Lao', sans-serif" },
+                            bodyFont: { family: "'Noto Sans Lao', sans-serif" }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'ຄະແນນ',
+                                font: { family: "'Noto Sans Lao', sans-serif" }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: { family: "'Noto Sans Lao', sans-serif" }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+
+            data.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+
+                let diffColorClass = 'text-gray-500';
+                let diffSign = '';
+                if (row.diff > 0) {
+                    diffColorClass = 'text-green-600 font-medium';
+                    diffSign = '+';
+                } else if (row.diff < 0) {
+                    diffColorClass = 'text-red-600 font-medium';
+                }
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${row.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.position}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${row.pre}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">${row.post}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center ${diffColorClass}">${diffSign}${row.diff}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
 </body>
 </html>
