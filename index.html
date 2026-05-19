@@ -3,171 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pre/Post Test Dashboard Analysis</title>
-    <!-- Tailwind CSS ສຳລັບການອອກແບບ -->
+    <title>ລີ້ງ ແລະ QR Code ສໍາລັບການຝຶກອົບຮົມ</title>
+    <!-- ໃຊ້ Tailwind CSS ສໍາລັບການຕົບແຕ່ງໜ້າເວັບ -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ໃຊ້ QRCode.js ສໍາລັບການສ້າງ QR Code ອັດຕະໂນມັດ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- SheetJS ສຳລັບອ່ານໄຟລ໌ Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Chart.js ສຳລັບສ້າງກຣາຟ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- ChartDataLabels plugin ສຳລັບສະແດງຕົວເລກເທິງກຣາຟ -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&display=swap');
         body {
             font-family: 'Noto Sans Lao', sans-serif;
             background-color: #f3f4f6;
         }
+        /* ຈັດໃຫ້ QR Code ຢູ່ເຄິ່ງກາງ */
+        .qr-container img {
+            margin: 0 auto;
+        }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="text-gray-800 p-4 md:p-8">
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-6xl mx-auto">
         
-        <!-- Header -->
-        <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">ບົດລາຍງານວິເຄາະຄະແນນ Pre-test & Post-test</h1>
-                <p class="mt-2 text-sm text-gray-600">ອັບໂຫຼດໄຟລ໌ Excel ຂອງທ່ານເພື່ອເບິ່ງການປຽບທຽບຄະແນນກ່ອນ ແລະ ຫຼັງການຝຶກອົບຮົມ</p>
-            </div>
-            <div class="mt-4 md:mt-0 flex space-x-3">
-                <button onclick="loadSampleData()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md shadow-sm text-sm font-medium transition-colors">
-                    ທົດລອງໃຊ້ຂໍ້ມູນຕົວຢ່າງ
-                </button>
-                <label class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-sm font-medium cursor-pointer transition-colors">
-                    ອັບໂຫຼດໄຟລ໌ Excel
-                    <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden">
-                </label>
+        <!-- ສ່ວນຫົວຂອງໜ້າເວັບ -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-700 mb-2">ລະບົບຂໍ້ມູນການຝຶກອົບຮົມ</h1>
+            <p class="text-gray-500 text-lg">ລວມລີ້ງ ແລະ QR Code ສໍາລັບການປະເມີນ, ການທົດສອບ ແລະ ກະດານຂໍ້ມູນ</p>
+        </div>
+
+        <!-- Section 1: Training Evaluation -->
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 border-b-2 border-blue-500 inline-block pb-1">1. ການປະເມີນການຝຶກອົບຮົມ (Training Evaluation)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- ປ້ອນຂໍ້ມູນ -->
+                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">ແບບຟອມ (Form entry)</h3>
+                    <div class="qr-container my-4" data-url="https://ee-eu.kobotoolbox.org/x/iTHDIO3r"></div>
+                    <a href="https://ee-eu.kobotoolbox.org/x/iTHDIO3r" target="_blank" class="w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium">
+                        ເຂົ້າສູ່ແບບຟອມ
+                    </a>
+                </div>
+
+                <!-- ດາວໂຫຼດຂໍ້ມູນ -->
+                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">ດາວໂຫຼດຂໍ້ມູນ (Data Download)</h3>
+                    <div class="qr-container my-4" data-url="https://eu.kobotoolbox.org/api/v2/assets/ae6KHtBseeqHKqCuHQ8vXr/export-settings/esGejUed6yvUZFgMTWqrLXE/data.xlsx"></div>
+                    <a href="https://eu.kobotoolbox.org/api/v2/assets/ae6KHtBseeqHKqCuHQ8vXr/export-settings/esGejUed6yvUZFgMTWqrLXE/data.xlsx" target="_blank" class="w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium">
+                        ດາວໂຫຼດໄຟລ໌ Excel
+                    </a>
+                </div>
+
             </div>
         </div>
 
-        <!-- ຂໍ້ຄວາມເຕືອນເມື່ອຍັງບໍ່ມີຂໍ້ມູນ -->
-        <div id="emptyState" class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h3 class="mt-2 text-lg font-medium text-gray-900">ຍັງບໍ່ມີຂໍ້ມູນ</h3>
-            <p class="mt-1 text-sm text-gray-500">ກະລຸນາອັບໂຫຼດໄຟລ໌ Excel ເພື່ອເລີ່ມຕົ້ນການວິເຄາະ.</p>
+        <!-- Section 2: Pre- and Post-test -->
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 border-b-2 border-purple-500 inline-block pb-1">2. ການທົດສອບກ່ອນ ແລະ ຫຼັງການຝຶກອົບຮົມ (Pre- and Post-test)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- ປ້ອນຂໍ້ມູນ -->
+                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">ແບບຟອມ (Form entry)</h3>
+                    <div class="qr-container my-4" data-url="https://ee-eu.kobotoolbox.org/x/foYg6n4w"></div>
+                    <a href="https://ee-eu.kobotoolbox.org/x/foYg6n4w" target="_blank" class="w-full text-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition font-medium">
+                        ເຂົ້າສູ່ແບບຟອມ
+                    </a>
+                </div>
+
+                <!-- ດາວໂຫຼດຂໍ້ມູນ -->
+                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">ດາວໂຫຼດຂໍ້ມູນ (Data Download)</h3>
+                    <div class="qr-container my-4" data-url="https://eu.kobotoolbox.org/api/v2/assets/a3uXtSvUXMjkMXRvMCaUyb/export-settings/esGoPByWZrvfPepdmqHGwBj/data.xlsx"></div>
+                    <a href="https://eu.kobotoolbox.org/api/v2/assets/a3uXtSvUXMjkMXRvMCaUyb/export-settings/esGoPByWZrvfPepdmqHGwBj/data.xlsx" target="_blank" class="w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium">
+                        ດາວໂຫຼດໄຟລ໌ Excel
+                    </a>
+                </div>
+
+            </div>
         </div>
 
-        <!-- Dashboard Content (ເຊື່ອງໄວ້ຈົນກວ່າຈະມີຂໍ້ມູນ) -->
-        <div id="dashboardContent" class="hidden space-y-6">
+        <!-- Section 3: Dashboard -->
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 border-b-2 border-orange-500 inline-block pb-1">3. ກະດານຂໍ້ມູນ (Dashboard)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Dashboard Training Evaluation -->
+                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1 text-center">ການປະເມີນການຝຶກອົບຮົມ <br> <span class="text-sm text-gray-500 font-normal">(Training Evaluation Dashboard)</span></h3>
+                    <div class="qr-container my-4" data-url="https://sengdeuan-bdv.github.io/TraininigEvaluation/"></div>
+                    <a href="https://sengdeuan-bdv.github.io/TraininigEvaluation/" target="_blank" class="w-full text-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition font-medium">
+                        ເຂົ້າເບິ່ງ Dashboard
+                    </a>
+                </div>
+
+                <!-- Dashboard Pre- and Post-test -->
+                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1 text-center">ການທົດສອບກ່ອນ ແລະ ຫຼັງ <br> <span class="text-sm text-gray-500 font-normal">(Pre- and Post-test Dashboard)</span></h3>
+                    <div class="qr-container my-4" data-url="https://sengdeuan-bdv.github.io/preposttest/"></div>
+                    <a href="https://sengdeuan-bdv.github.io/preposttest/" target="_blank" class="w-full text-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition font-medium">
+                        ເຂົ້າເບິ່ງ Dashboard
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Section 4: Analysis old from google sheet -->
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 border-b-2 border-teal-500 inline-block pb-1">4. ວິເຄາະຂໍ້ມູນເກົ່າ (Analysis old from google sheet)</h2>
             
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
-                <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
-                    <div class="p-5">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
-                                <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                            </div>
-                            <div class="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt class="text-sm font-medium text-gray-500 truncate">ຈຳນວນຜູ້ເຂົ້າຮ່ວມທັງໝົດ</dt>
-                                    <dd class="flex items-baseline">
-                                        <div class="text-2xl font-semibold text-gray-900" id="totalParticipants">0</div>
-                                        <div class="ml-2 text-sm text-gray-500">ຄົນ</div>
-                                    </dd>
-                                </dl>
-                            </div>
-                        </div>
+            <div class="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+                <!-- Header ຂອງແທັບວິເຄາະ -->
+                <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">ບົດລາຍງານວິເຄາະຄະແນນ Pre-test & Post-test</h3>
+                        <p class="mt-2 text-sm text-gray-600">ອັບໂຫຼດໄຟລ໌ Excel ຂອງທ່ານເພື່ອເບິ່ງການປຽບທຽບຄະແນນກ່ອນ ແລະ ຫຼັງການຝຶກອົບຮົມ</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+                        <button onclick="loadSampleData()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md shadow-sm text-sm font-medium transition-colors">
+                            ທົດລອງໃຊ້ຂໍ້ມູນຕົວຢ່າງ
+                        </button>
+                        <label class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-sm font-medium cursor-pointer transition-colors">
+                            ອັບໂຫຼດໄຟລ໌ Excel
+                            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden">
+                        </label>
                     </div>
                 </div>
 
-                <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
-                    <div class="p-5">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
-                                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
+                <!-- ຂໍ້ຄວາມເຕືອນເມື່ອຍັງບໍ່ມີຂໍ້ມູນ -->
+                <div id="emptyState" class="bg-gray-50 rounded-xl border border-gray-200 p-12 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 class="mt-2 text-lg font-medium text-gray-900">ຍັງບໍ່ມີຂໍ້ມູນ</h3>
+                    <p class="mt-1 text-sm text-gray-500">ກະລຸນາອັບໂຫຼດໄຟລ໌ Excel ເພື່ອເລີ່ມຕົ້ນການວິເຄາະ.</p>
+                </div>
+
+                <!-- Dashboard Content (ເຊື່ອງໄວ້ຈົນກວ່າຈະມີຂໍ້ມູນ) -->
+                <div id="dashboardContent" class="hidden space-y-6">
+                    
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                        <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                                        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">ຈຳນວນຜູ້ເຂົ້າຮ່ວມທັງໝົດ</dt>
+                                            <dd class="flex items-baseline">
+                                                <div class="text-2xl font-semibold text-gray-900" id="totalParticipants">0</div>
+                                                <div class="ml-2 text-sm text-gray-500">ຄົນ</div>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt class="text-sm font-medium text-gray-500 truncate">ຄະແນນສະເລ່ຍ Pre-test</dt>
-                                    <dd class="flex items-baseline">
-                                        <div class="text-2xl font-semibold text-gray-900" id="avgPreScore">0</div>
-                                    </dd>
-                                </dl>
+                        </div>
+
+                        <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
+                                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">ຄະແນນສະເລ່ຍ Pre-test</dt>
+                                            <dd class="flex items-baseline">
+                                                <div class="text-2xl font-semibold text-gray-900" id="avgPreScore">0</div>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                                        <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">ຄະແນນສະເລ່ຍ Post-test</dt>
+                                            <dd class="flex items-baseline">
+                                                <div class="text-2xl font-semibold text-gray-900" id="avgPostScore">0</div>
+                                                <div class="ml-2 text-sm font-medium text-green-600" id="scoreImprovement">
+                                                    +0%
+                                                </div>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
-                    <div class="p-5">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
-                                <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                </svg>
-                            </div>
-                            <div class="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt class="text-sm font-medium text-gray-500 truncate">ຄະແນນສະເລ່ຍ Post-test</dt>
-                                    <dd class="flex items-baseline">
-                                        <div class="text-2xl font-semibold text-gray-900" id="avgPostScore">0</div>
-                                        <div class="ml-2 text-sm font-medium text-green-600" id="scoreImprovement">
-                                            +0%
-                                        </div>
-                                    </dd>
-                                </dl>
-                            </div>
+                    <!-- Charts Section -->
+                    <div class="bg-white shadow-sm rounded-xl border border-gray-200 p-6 mt-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">ປຽບທຽບຄະແນນສະເລ່ຍ ແບ່ງຕາມຕຳແໜ່ງ</h3>
+                        <div class="relative h-80 w-full">
+                            <canvas id="positionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Table Section -->
+                    <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden mt-6">
+                        <div class="px-6 py-5 border-b border-gray-200">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">ຕາຕະລາງປຽບທຽບຄະແນນລາຍບຸກຄົນ</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ລຳດັບ</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ຊື່ ແລະ ນາມສະກຸນ</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ຕຳແໜ່ງ</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pre-test</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Post-test</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ການປ່ຽນແປງ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Data rows will be inserted here -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Charts Section -->
-            <div class="bg-white shadow-sm rounded-xl border border-gray-200 p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">ປຽບທຽບຄະແນນສະເລ່ຍ ແບ່ງຕາມຕຳແໜ່ງ</h3>
-                <div class="relative h-80 w-full">
-                    <canvas id="positionChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Table Section -->
-            <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
-                <div class="px-6 py-5 border-b border-gray-200">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">ຕາຕະລາງປຽບທຽບຄະແນນລາຍບຸກຄົນ</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ລຳດັບ</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ຊື່ ແລະ ນາມສະກຸນ</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ຕຳແໜ່ງ</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pre-test</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Post-test</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ການປ່ຽນແປງ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
-                            <!-- Data rows will be inserted here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
         </div>
+        
+        <footer class="text-center py-6 text-gray-500 text-sm mt-8 border-t border-gray-300">
+            &copy; 2026 Training Resources Portal.
+        </footer>
     </div>
 
+    <!-- Script ສໍາລັບການ Render ພາບ QR Code ເຂົ້າໃນແຕ່ລະບ໋ອກ -->
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // ຄົ້ນຫາທຸກໆ div ທີ່ມີ class qr-container
+            const qrElements = document.querySelectorAll('.qr-container');
+            
+            qrElements.forEach(el => {
+                const url = el.getAttribute('data-url');
+                
+                // ສ້າງ QR Code ໃໝ່ເຂົ້າໃນ div ນັ້ນ
+                new QRCode(el, {
+                    text: url,
+                    width: 150,
+                    height: 150,
+                    colorDark : "#1f2937", // ສີຂອງ QR (ສີເທົາເຂັ້ມ)
+                    colorLight : "#ffffff", // ສີພື້ນຫຼັງ (ສີຂາວ)
+                    correctLevel : QRCode.CorrectLevel.H // ລະດັບການແກ້ໄຂຂໍ້ຜິດພາດສູງສຸດ ເພື່ອໃຫ້ສະແກນງ່າຍ
+                });
+            });
+        });
+
+        // -----------------------------------------------------
+        // Script ສຳລັບພາກວິເຄາະຂໍ້ມູນ (Analysis Dashboard)
+        // -----------------------------------------------------
         let myChart = null;
 
-        // ຟັງຊັນສຳລັບແຍກເອົາສະເພາະຕົວເລກທາງໜ້າຂອງເຄື່ອງໝາຍ "/"
         function parseScore(scoreStr) {
             if (scoreStr === undefined || scoreStr === null || scoreStr === '') return null;
             const str = String(scoreStr).trim();
-            const parts = str.split('/'); // ແຍກດ້ວຍເຄື່ອງໝາຍ /
-            const num = parseFloat(parts[0]); // ເອົາໂຕເລກທາງໜ້າ
+            const parts = str.split('/'); 
+            const num = parseFloat(parts[0]); 
             return isNaN(num) ? null : num;
         }
 
-        // ຟັງຊັນຊອກຫາຊື່ Column ທີ່ຖືກຕ້ອງ ໂດຍບໍ່ສົນໃຈຍະຫວ່າງ ຫຼື ຕົວພິມໃຫຍ່-ນ້ອຍ
         function findColumnKey(keys, searchTerms) {
             for (let key of keys) {
                 const lowerKey = key.toLowerCase().replace(/\s+/g, '');
@@ -189,20 +311,14 @@
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
-                    
-                    // ເອົາຂໍ້ມູນຈາກ Sheet ທຳອິດ
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    // ແປງເປັນ JSON
                     const json = XLSX.utils.sheet_to_json(worksheet, {defval: ""});
                     processData(json);
                 } catch (error) {
                     alert("ເກີດຂໍ້ຜິດພາດໃນການອ່ານໄຟລ໌ Excel: " + error.message);
                 }
             };
-            
-            // ອ່ານໄຟລ໌ໃນຮູບແບບ ArrayBuffer
             reader.readAsArrayBuffer(file);
         });
 
@@ -215,7 +331,6 @@
                 {"Score pretest ": "7/10", "score post test ": "10/10", "ຊື່ ແລະ ນາມສະກຸນ": "ທ້າວ ຄຳຫຼ້າ", "ຕຳແໜ່ງ": "ໝໍ"},
                 {"Score pretest ": "5/10", "score post test ": "9/10", "ຊື່ ແລະ ນາມສະກຸນ": "ນາງ ວັນເພັງ", "ຕຳແໜ່ງ": "ຜະດຸງຄັນ"}
             ];
-            
             processData(sampleData);
         }
 
@@ -226,15 +341,13 @@
             }
 
             const keys = Object.keys(data[0]);
-            
-            // ຄົ້ນຫາຖັນທີ່ຕ້ອງການ
             const preKey = findColumnKey(keys, ['scorepretest', 'pretest', 'scorepre']);
             const postKey = findColumnKey(keys, ['scoreposttest', 'posttest', 'scorepost']);
             const nameKey = findColumnKey(keys, ['ຊື່ແລະນາມສະກຸນ', 'ຊື່', 'name']);
             const positionKey = findColumnKey(keys, ['ຕຳແໜ່ງ', 'position', 'role', 'ຕໍາແໜ່ງ']);
 
             if (!preKey || !postKey) {
-                alert("ບໍ່ພົບຖັນ 'Score pretest' ຫຼື 'Score post test' ໃນໄຟລ໌ຂອງທ່ານ. ກະລຸນາກວດສອບໄຟລ໌ CSV ອີກຄັ້ງ.");
+                alert("ບໍ່ພົບຖັນ 'Score pretest' ຫຼື 'Score post test' ໃນໄຟລ໌ຂອງທ່ານ. ກະລຸນາກວດສອບໄຟລ໌ອີກຄັ້ງ.");
                 return;
             }
 
@@ -248,7 +361,6 @@
                 const preScore = parseScore(row[preKey]);
                 const postScore = parseScore(row[postKey]);
                 
-                // ຖ້າບໍ່ມີຄະແນນໃຫ້ຂ້າມແຖວນັ້ນ
                 if (preScore === null && postScore === null) return;
                 
                 const safePre = preScore || 0;
@@ -260,7 +372,6 @@
                 totalPre += safePre;
                 totalPost += safePost;
 
-                // ເກັບຂໍ້ມູນລາຍບຸກຄົນສຳລັບຕາຕະລາງ
                 individualData.push({
                     name: name,
                     position: position,
@@ -269,7 +380,6 @@
                     diff: safePost - safePre
                 });
 
-                // ຈັດກຸ່ມຂໍ້ມູນຕາມຕຳແໜ່ງ
                 if (!positions[position]) {
                     positions[position] = { preSum: 0, postSum: 0, count: 0 };
                 }
@@ -290,7 +400,6 @@
                 improvement = (((avgPost - avgPre) / avgPre) * 100).toFixed(1);
             }
 
-            // ສະແດງຜົນໃນ UI
             document.getElementById('emptyState').classList.add('hidden');
             document.getElementById('dashboardContent').classList.remove('hidden');
 
@@ -311,13 +420,11 @@
             renderTable(individualData);
         }
 
-        // ລົງທະບຽນ Plugin DataLabels ໃຫ້ Chart.js ຮັບຮູ້
         Chart.register(ChartDataLabels);
 
         function renderChart(positions) {
             const ctx = document.getElementById('positionChart').getContext('2d');
             
-            // ຖ້າເຄີຍມີ Chart ແລ້ວ ໃຫ້ລຶບຂອງເກົ່າຖິ້ມກ່ອນ
             if (myChart) {
                 myChart.destroy();
             }
@@ -334,7 +441,7 @@
                         {
                             label: 'ຄະແນນສະເລ່ຍ Pre-test',
                             data: preData,
-                            backgroundColor: 'rgba(239, 68, 68, 0.7)', // Red
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
                             borderColor: 'rgb(239, 68, 68)',
                             borderWidth: 1,
                             borderRadius: 4
@@ -342,7 +449,7 @@
                         {
                             label: 'ຄະແນນສະເລ່ຍ Post-test',
                             data: postData,
-                            backgroundColor: 'rgba(34, 197, 94, 0.7)', // Green
+                            backgroundColor: 'rgba(34, 197, 94, 0.7)',
                             borderColor: 'rgb(34, 197, 94)',
                             borderWidth: 1,
                             borderRadius: 4
@@ -353,9 +460,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
-                        padding: {
-                            top: 25 // ເພີ່ມຍະຫວ່າງດ້ານເທິງກຣາຟເພື່ອບໍ່ໃຫ້ຕົວເລກຖືກຕັດ
-                        }
+                        padding: { top: 25 }
                     },
                     plugins: {
                         datalabels: {
@@ -367,10 +472,7 @@
                                 weight: 'bold',
                                 size: 12
                             },
-                            formatter: function(value) {
-                                // ສະແດງຕົວເລກ. ຖ້າຢາກໃຫ້ມີເຄື່ອງໝາຍ % ຕໍ່ທ້າຍສາມາດປ່ຽນເປັນ: return value + '%';
-                                return value; 
-                            }
+                            formatter: function(value) { return value; }
                         },
                         legend: {
                             position: 'top',
