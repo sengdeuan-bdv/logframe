@@ -3,1347 +3,1580 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ລີ້ງ ແລະ QR Code ສໍາລັບການຝຶກອົບຮົມ</title>
-    
-    <!-- ໃຊ້ Tailwind CSS ສໍາລັບການຕົບແຕ່ງໜ້າເວັບ -->
+    <title>Logframe Application</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- ໃຊ້ QRCode.js ສໍາລັບການສ້າງ QR Code ອັດຕະໂນມັດ -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <!-- SheetJS ສຳລັບອ່ານໄຟລ໌ Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <!-- ---------------------------------------------------- -->
-    <!-- Libraries ສຳລັບລະບົບວິເຄາະໃໝ່ (React & Recharts) -->
-    <!-- ---------------------------------------------------- -->
-    <!-- React & ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Recharts -->
-    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.1.12/umd/Recharts.js"></script>
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&display=swap');
+        
         body {
             font-family: 'Noto Sans Lao', sans-serif;
             background-color: #f3f4f6;
         }
-        /* ຈັດໃຫ້ QR Code ຢູ່ເຄິ່ງກາງ */
-        .qr-container img {
-            margin: 0 auto;
+        
+        .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .logframe-table th, .tracking-table th, .planning-table th, .budget-table th {
+            background-color: #d1d5db;
+            color: #374151;
+            font-weight: 600;
+            border: 1px solid #9ca3af;
+            padding: 8px 12px;
+            text-align: center;
         }
-        /* Custom Scrollbar for tables */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        .logframe-table td, .tracking-table td, .planning-table td, .budget-table td {
+            background-color: #f3f4f6;
+            border: 1px solid #9ca3af;
+            padding: 8px 12px;
+            vertical-align: top;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
-        }
+        .logframe-table tr.header-row td { background-color: #d1d5db; font-weight: bold; text-align: center; color: white; }
+        .logframe-table tr.blue-ribbon td { background-color: #93c5fd; font-weight: bold; color: #1e3a8a; border-color: #60a5fa; }
+
+        .editable-cell { outline: none; transition: background-color 0.2s, box-shadow 0.2s; }
+        .editable-cell:focus { background-color: #ffffff !important; box-shadow: inset 0 0 0 2px #3b82f6; }
+        .editable-cell:hover:not(:focus) { background-color: #e0e7ff !important; cursor: text; }
+
+        td.has-list { padding: 0 !important; vertical-align: top; }
+        .list-container { display: flex; flex-direction: column; height: 100%; }
+        .list-item { outline: none; padding: 8px 12px; border-bottom: 1px solid #9ca3af; transition: all 0.2s; min-height: 45px; }
+        .list-item:last-child { border-bottom: none; }
+        .list-item:focus { background-color: #ffffff; box-shadow: inset 0 0 0 2px #3b82f6; }
+        .list-item:hover:not(:focus) { background-color: #e0e7ff; cursor: text; }
+
+        .exporting .add-btn, .exporting .hide-on-export { display: none !important; }
+        
+        /* Language Toggle Styles */
+        body.lang-en .lao-text { display: none !important; }
+        body.lang-lo .en-text { display: none !important; }
+        
+        body.lang-bi .lao-text { margin-top: 0.25rem; color: #4b5563; font-size: 0.95em; }
+        body.lang-bi .en-text { color: #1f2937; }
+        
+        body.lang-en .en-text { color: inherit; font-size: inherit; margin-top: 0; }
+        body.lang-lo .lao-text { color: inherit; font-size: inherit; margin-top: 0; }
+        
+        .en-text, .lao-text { outline: none; min-height: 1.2em; word-break: break-word; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body class="text-gray-800 p-4 md:p-8">
+<body class="h-screen flex flex-col overflow-hidden lang-lo">
 
-    <div class="max-w-6xl mx-auto">
-        
-        <!-- ສ່ວນຫົວຂອງໜ້າເວັບ -->
-        <div class="text-center mb-10">
-            <h1 class="text-3xl md:text-4xl font-bold text-blue-700 mb-2">ລະບົບຂໍ້ມູນການຝຶກອົບຮົມ</h1>
-            <p class="text-gray-500 text-lg">ລວມລີ້ງ ແລະ QR Code ສໍາລັບການປະເມີນ, ການທົດສອບ ແລະ ກະດານຂໍ້ມູນ</p>
-        </div>
-
-        <!-- Section 1: Training Evaluation -->
-        <div class="mb-12">
-            <h2 class="text-2xl font-bold text-gray-700 mb-6 border-b-2 border-blue-500 inline-block pb-1">1. ການປະເມີນການຝຶກອົບຮົມ (Training Evaluation)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <!-- ປ້ອນຂໍ້ມູນ -->
-                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
-                    <h3 class="text-lg font-bold text-gray-800 mb-1">ແບບຟອມ (Form entry)</h3>
-                    <div class="qr-container my-4" data-url="https://ee-eu.kobotoolbox.org/x/iTHDIO3r"></div>
-                    <a href="https://ee-eu.kobotoolbox.org/x/iTHDIO3r" target="_blank" class="w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium">
-                        ເຂົ້າສູ່ແບບຟອມ
-                    </a>
-                </div>
-
-                <!-- ດາວໂຫຼດຂໍ້ມູນ -->
-                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
-                    <h3 class="text-lg font-bold text-gray-800 mb-1">ດາວໂຫຼດຂໍ້ມູນ (Data Download)</h3>
-                    <div class="qr-container my-4" data-url="https://eu.kobotoolbox.org/api/v2/assets/ae6KHtBseeqHKqCuHQ8vXr/export-settings/esGejUed6yvUZFgMTWqrLXE/data.xlsx"></div>
-                    <a href="https://eu.kobotoolbox.org/api/v2/assets/ae6KHtBseeqHKqCuHQ8vXr/export-settings/esGejUed6yvUZFgMTWqrLXE/data.xlsx" target="_blank" class="w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium">
-                        ດາວໂຫຼດໄຟລ໌ Excel
-                    </a>
-                </div>
-
+    <div class="bg-blue-50 border-b border-blue-200 p-2 flex flex-col gap-2 shrink-0 hide-on-export">
+        <div class="flex justify-between items-center mb-1 px-2">
+            <div class="flex text-xs text-gray-600 gap-4">
+                <span class="cursor-pointer hover:text-blue-600 font-medium text-blue-800 border-b-2 border-blue-600 pb-1" data-i18n="menu-project">Project</span>
+                <span class="cursor-pointer hover:text-blue-600" data-i18n="menu-home">Home</span>
+                <span class="cursor-pointer hover:text-blue-600" data-i18n="menu-insert">Insert</span>
+                <span class="cursor-pointer hover:text-blue-600" data-i18n="menu-view">View</span>
             </div>
-        </div>
-
-        <!-- Section 2: Pre- and Post-test -->
-        <div class="mb-12">
-            <h2 class="text-2xl font-bold text-gray-700 mb-6 border-b-2 border-purple-500 inline-block pb-1">2. ການທົດສອບກ່ອນ ແລະ ຫຼັງການຝຶກອົບຮົມ (Pre- and Post-test)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <!-- ປ້ອນຂໍ້ມູນ -->
-                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
-                    <h3 class="text-lg font-bold text-gray-800 mb-1">ແບບຟອມ (Form entry)</h3>
-                    <div class="qr-container my-4" data-url="https://ee-eu.kobotoolbox.org/x/foYg6n4w"></div>
-                    <a href="https://ee-eu.kobotoolbox.org/x/foYg6n4w" target="_blank" class="w-full text-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition font-medium">
-                        ເຂົ້າສູ່ແບບຟອມ
-                    </a>
-                </div>
-
-                <!-- ດາວໂຫຼດຂໍ້ມູນ -->
-                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
-                    <h3 class="text-lg font-bold text-gray-800 mb-1">ດາວໂຫຼດຂໍ້ມູນ (Data Download)</h3>
-                    <div class="qr-container my-4" data-url="https://eu.kobotoolbox.org/api/v2/assets/a3uXtSvUXMjkMXRvMCaUyb/export-settings/esGoPByWZrvfPepdmqHGwBj/data.xlsx"></div>
-                    <a href="https://eu.kobotoolbox.org/api/v2/assets/a3uXtSvUXMjkMXRvMCaUyb/export-settings/esGoPByWZrvfPepdmqHGwBj/data.xlsx" target="_blank" class="w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium">
-                        ດາວໂຫຼດໄຟລ໌ Excel
-                    </a>
-                </div>
-
+            <div class="flex bg-white rounded border border-gray-300 overflow-hidden text-xs font-bold shadow-sm">
+                <button onclick="setLanguage('en')" id="lang-en" class="px-3 py-1 hover:bg-gray-100 text-gray-500 transition-colors">EN</button>
+                <div class="w-px bg-gray-300"></div>
+                <button onclick="setLanguage('lo')" id="lang-lo" class="px-3 py-1 bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors">LA</button>
+                <div class="w-px bg-gray-300"></div>
+                <button onclick="setLanguage('bi')" id="lang-bi" class="px-3 py-1 hover:bg-gray-100 text-gray-500 transition-colors" title="Bilingual / ທັງສອງພາສາ">EN/LA</button>
             </div>
-        </div>
-
-        <!-- Section 3: Dashboard -->
-        <div class="mb-12">
-            <h2 class="text-2xl font-bold text-gray-700 mb-6 border-b-2 border-orange-500 inline-block pb-1">3. ກະດານຂໍ້ມູນ (Dashboard)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <!-- Dashboard Training Evaluation -->
-                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
-                    <h3 class="text-lg font-bold text-gray-800 mb-1 text-center">ການປະເມີນການຝຶກອົບຮົມ <br> <span class="text-sm text-gray-500 font-normal">(Training Evaluation Dashboard)</span></h3>
-                    <div class="qr-container my-4" data-url="https://sengdeuan-bdv.github.io/TraininigEvaluation/"></div>
-                    <a href="https://sengdeuan-bdv.github.io/TraininigEvaluation/" target="_blank" class="w-full text-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition font-medium">
-                        ເຂົ້າເບິ່ງ Dashboard
-                    </a>
-                </div>
-
-                <!-- Dashboard Pre- and Post-test -->
-                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col items-center hover:shadow-lg transition">
-                    <h3 class="text-lg font-bold text-gray-800 mb-1 text-center">ການທົດສອບກ່ອນ ແລະ ຫຼັງ <br> <span class="text-sm text-gray-500 font-normal">(Pre- and Post-test Dashboard)</span></h3>
-                    <div class="qr-container my-4" data-url="https://sengdeuan-bdv.github.io/preposttest/"></div>
-                    <a href="https://sengdeuan-bdv.github.io/preposttest/" target="_blank" class="w-full text-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition font-medium">
-                        ເຂົ້າເບິ່ງ Dashboard
-                    </a>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Section 4: ລະບົບວິເຄາະຜົນການທົດສອບໃໝ່ (React) -->
-        <div class="mb-12">
-            <h2 class="text-2xl font-bold text-gray-700 mb-6 border-b-2 border-teal-500 inline-block pb-1">4. ລະບົບວິເຄາະຜົນການທົດສອບ (Pre/Post Test Dashboard)</h2>
-            <!-- ກ່ອງສຳລັບ Mount React App -->
-            <div id="react-dashboard-root" class="rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white min-h-[600px] relative"></div>
         </div>
         
-        <footer class="text-center py-6 text-gray-500 text-sm mt-8 border-t border-gray-300">
-            &copy; 2026 Training Resources Portal.
-        </footer>
+        <div class="flex items-center gap-4 bg-white p-2 rounded shadow-sm overflow-x-auto">
+            <!-- SAVE ACTIONS -->
+            <div class="flex items-center gap-2 border-r pr-3">
+                <button onclick="saveAsHTML()" class="p-1 hover:bg-gray-100 rounded text-gray-700 flex flex-col items-center text-[10px]" title="ບັນທຶກໜ້ານີ້ໄວ້ແກ້ໄຂຕໍ່ (HTML)">
+                    <i class="fas fa-save text-lg text-blue-600 mb-1"></i> <span data-i18n="btn-save-html">Save HTML</span>
+                </button>
+                <button onclick="saveAsJSON()" class="p-1 hover:bg-gray-100 rounded text-gray-700 flex flex-col items-center text-[10px]" title="ບັນທຶກຂໍ້ມູນເປັນ JSON">
+                    <i class="fas fa-file-code text-lg text-purple-600 mb-1"></i> <span data-i18n="btn-json">JSON</span>
+                </button>
+                <!-- CLOUD CACHE SAVE & RESTORE -->
+                <button onclick="saveToCache()" class="p-1 hover:bg-gray-100 rounded text-gray-700 flex flex-col items-center text-[10px]" title="ບັນທຶກຊົ່ວຄາວໃນແຄສ (Cloud/Firestore)">
+                    <i class="fas fa-cloud-upload-alt text-lg text-emerald-600 mb-1"></i> <span data-i18n="btn-quick-save">Quick Save</span>
+                </button>
+                <button onclick="loadFromCache(true)" class="p-1 hover:bg-gray-100 rounded text-gray-700 flex flex-col items-center text-[10px]" title="ດຶງຂໍ້ມູນຄືນຈາກແຄສ">
+                    <i class="fas fa-cloud-download-alt text-lg text-sky-600 mb-1"></i> <span data-i18n="btn-restore-cache">Restore</span>
+                </button>
+            </div>
+
+            <!-- IMPORT ACTIONS -->
+            <div class="flex items-center gap-2 border-r pr-3">
+                <button onclick="document.getElementById('importJsonInput').click()" class="p-1 hover:bg-gray-100 rounded text-gray-700 flex flex-col items-center text-[10px]" title="ນຳເຂົ້າໄຟລ໌ JSON">
+                    <i class="fas fa-file-import text-lg text-orange-600 mb-1"></i> <span data-i18n="btn-import">Import</span>
+                </button>
+                <input type="file" id="importJsonInput" accept=".json" class="hidden" onchange="importJSON(event)">
+            </div>
+
+            <!-- EXPORT ACTIONS -->
+            <div class="flex items-center gap-2 border-r pr-3">
+                <button onclick="openExportModal('excel')" class="p-1 hover:bg-gray-100 rounded text-gray-700 flex flex-col items-center text-[10px]" title="ສົ່ງອອກເປັນ Excel">
+                    <i class="fas fa-file-excel text-lg text-green-600 mb-1"></i> <span data-i18n="btn-excel">Excel</span>
+                </button>
+                <button onclick="openExportModal('word')" class="p-1 hover:bg-gray-100 rounded text-gray-700 flex flex-col items-center text-[10px]" title="ສົ່ງອອກເປັນ Word">
+                    <i class="fas fa-file-word text-lg text-blue-800 mb-1"></i> <span data-i18n="btn-word">Word</span>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 border-r pr-3">
+                <select id="fontFamily" onchange="execCmd('fontName', this.value)" class="text-sm border border-gray-300 rounded p-1 text-gray-700 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                    <option value="'Noto Sans Lao', sans-serif">Noto Sans Lao</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="'Times New Roman', serif">Times New Roman</option>
+                </select>
+                <div class="flex items-center border border-gray-300 rounded overflow-hidden h-8 bg-gray-50" title="ເລືອກສີຕົວໜັງສື">
+                    <input type="color" id="fontColor" onchange="execCmd('foreColor', this.value)" class="w-8 h-8 p-0 border-0 cursor-pointer" value="#000000">
+                </div>
+                <div class="flex bg-gray-50 rounded border border-gray-300 h-8 items-center">
+                    <button onclick="execCmd('bold')" class="w-8 h-full hover:bg-gray-200 text-gray-700 font-bold border-r border-gray-300">B</button>
+                    <button onclick="execCmd('italic')" class="w-8 h-full hover:bg-gray-200 text-gray-700 italic border-r border-gray-300">I</button>
+                    <button onclick="execCmd('underline')" class="w-8 h-full hover:bg-gray-200 text-gray-700 underline">U</button>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="switchTab('project')" id="btn-project" class="tab-btn flex flex-col items-center justify-center p-2 rounded hover:bg-blue-100 min-w-[70px] border border-transparent">
+                    <i class="fas fa-folder-open text-yellow-500 text-xl mb-1"></i> <span class="text-xs font-medium text-gray-700" data-i18n="tab-project">Project</span>
+                </button>
+                <button onclick="switchTab('logframe')" id="btn-logframe" class="tab-btn bg-blue-100 border-blue-300 flex flex-col items-center justify-center p-2 rounded hover:bg-blue-200 min-w-[70px] border">
+                    <i class="fas fa-table-cells text-green-600 text-xl mb-1"></i> <span class="text-xs font-medium text-gray-700" data-i18n="tab-logframe">Logframe</span>
+                </button>
+                <button onclick="switchTab('planning')" id="btn-planning" class="tab-btn flex flex-col items-center justify-center p-2 rounded hover:bg-blue-100 min-w-[70px] border border-transparent">
+                    <i class="fas fa-stream text-blue-500 text-xl mb-1"></i> <span class="text-xs font-medium text-gray-700" data-i18n="tab-planning">Planning</span>
+                </button>
+                <button onclick="switchTab('budget')" id="btn-budget" class="tab-btn flex flex-col items-center justify-center p-2 rounded hover:bg-blue-100 min-w-[70px] border border-transparent">
+                    <i class="fas fa-file-invoice-dollar text-green-700 text-xl mb-1"></i> <span class="text-xs font-medium text-gray-700" data-i18n="tab-budget">Budget</span>
+                </button>
+                <button onclick="switchTab('tracking')" id="btn-tracking" class="tab-btn flex flex-col items-center justify-center p-2 rounded hover:bg-blue-100 min-w-[70px] border border-transparent">
+                    <i class="fas fa-chart-line text-purple-600 text-xl mb-1"></i> <span class="text-xs font-medium text-gray-700" data-i18n="tab-tracking">Tracking</span>
+                </button>
+                <button onclick="switchTab('settings')" id="btn-settings" class="tab-btn flex flex-col items-center justify-center p-2 rounded hover:bg-blue-100 min-w-[70px] border border-transparent ml-2 border-l-2">
+                    <i class="fas fa-cog text-gray-500 text-xl mb-1"></i> <span class="text-xs font-medium text-gray-700" data-i18n="tab-settings">Settings</span>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- Script ສໍາລັບການ Render ພາບ QR Code ເຂົ້າໃນແຕ່ລະບ໋ອກ -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // ຄົ້ນຫາທຸກໆ div ທີ່ມີ class qr-container
-            const qrElements = document.querySelectorAll('.qr-container');
-            
-            qrElements.forEach(el => {
-                const url = el.getAttribute('data-url');
-                
-                // ສ້າງ QR Code ໃໝ່ເຂົ້າໃນ div ນັ້ນ
-                new QRCode(el, {
-                    text: url,
-                    width: 150,
-                    height: 150,
-                    colorDark : "#1f2937", // ສີຂອງ QR (ສີເທົາເຂັ້ມ)
-                    colorLight : "#ffffff", // ສີພື້ນຫຼັງ (ສີຂາວ)
-                    correctLevel : QRCode.CorrectLevel.H // ລະດັບການແກ້ໄຂຂໍ້ຜິດພາດສູງສຸດ ເພື່ອໃຫ້ສະແກນງ່າຍ
-                });
-            });
-        });
-    </script>
-
-    <!-- ----------------------------------------------------- -->
-    <!-- Script ສຳລັບພາກວິເຄາະຂໍ້ມູນ (React Application)          -->
-    <!-- ----------------------------------------------------- -->
-    <script type="text/babel">
-        const { useState, useEffect, useMemo, useRef } = React;
-        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = window.Recharts;
-
-        // Gemini API Configuration
-        const apiKey = ""; // API Key ຈະຖືກໃຊ້ຈາກ Environment ຖ້າມີ
-
-        // ວັດຈະນານຸກົມ (Dictionary) ສຳລັບ 2 ພາສາ
-        const translations = {
-            lo: {
-                appTitleDefault: "Pre- and Post-Test analysis",
-                exportBtn: "Export Report (.doc)",
-                exportExcelBtn: "ສົ່ງອອກ Excel (.xlsx)",
-                clearBtn: "ລຶບຂໍ້ມູນ (Clear)",
-                provinceLabel: "ແຂວງ:",
-                dateLabel: "ເດືອນ/ປີ:",
-                allProvinces: "-- ທັງໝົດ (All) --",
-                selectedItems: "ແຂວງທີ່ເລືອກ",
-                allDates: "-- ທັງໝົດ (All) --",
-                startAnalysis: "ເລີ່ມຕົ້ນການວິເຄາະ",
-                uploadDesc: "ກະລຸນາອັບໂຫຼດໄຟລ໌ Excel (.xlsx, .xls) ຂອງແບບທົດສອບ Pre/Post-test ຂອງທ່ານລົງໃນນີ້.",
-                uploadBtn: "ອັບໂຫຼດໄຟລ໌ Excel",
-                totalParticipants: "ຜູ້ເຂົ້າຮ່ວມທັງໝົດ",
-                times: "ຄັ້ງ",
-                genderRatio: "ອັດຕາສ່ວນ ຍິງ/ຊາຍ",
-                genderDesc: "ຍິງ / ຊາຍ (ຈາກຂໍ້ມູນທັງໝົດ)",
-                avgPre: "ຄະແນນສະເລ່ຍ (ກ່ອນອົບຮົມ)",
-                avgPreSub: "Pre-test Average Score",
-                avgPost: "ຄະແນນສະເລ່ຍ (ຫຼັງອົບຮົມ)",
-                sumPre: "ຄະແນນລວມ (Pre-test)",
-                sumPost: "ຄະແນນລວມ (Post-test)",
-                femaleShort: "ຍິງ:",
-                maleShort: "ຊາຍ:",
-                increased: "ເພີ່ມຂຶ້ນ",
-                qTableTitle: "ອັດຕາການຕອບຖືກແຕ່ລະຄຳຖາມ (Pre vs Post)",
-                viewTable: "ຕາລາງ",
-                viewChart: "ກຣາຟ",
-                translateLoading: "ກຳລັງແປຄຳຖາມ...",
-                code: "ລະຫັດ",
-                qTopic: "ຫົວຂໍ້ຄຳຖາມ",
-                improvement: "ພັດທະນາການ",
-                aiTitle: "ວິເຄາະຈຸດອ່ອນ ດ້ວຍ Gemini AI",
-                aiDesc: "ຫົວຂໍ້ທີ່ຜູ້ເຂົ້າຮ່ວມຍັງມີຄວາມເຂົ້າໃຈໜ້ອຍທີ່ສຸດ ຫຼັງຈາກການອົບຮົມ",
-                customPromptLabel: "ຄຳແນະນຳເພີ່ມເຕີມສຳລັບ AI (ທາງເລືອກ):",
-                customPromptPlaceholder: "ເຊັ່ນ: ໃຫ້ເນັ້ນໃສ່ການສອນແບບປະຕິບັດຕົວຈິງ...",
-                generateAiBtn: "ສ້າງຄຳແນະນຳ (Generate Advice)",
-                aiLoading: "ກຳລັງວິເຄາະຂໍ້ມູນ ແລະ ແປພາສາ...",
-                aiError: "ບໍ່ສາມາດດຶງຂໍ້ມູນຈາກ AI ໄດ້ໃນຂະນະນີ້. ກະລຸນາລອງໃໝ່ພາຍຫຼັງ.",
-                orgChartTitle: "ປຽບທຽບຄະແນນສະເລ່ຍ ຕາມປະເພດອົງການຈັດຕັ້ງ (Organization Type)",
-                preTestName: "ກ່ອນອົບຮົມ (Pre-test)",
-                postTestName: "ຫຼັງອົບຮົມ (Post-test)",
-                aiPromptLang: "ເປັນພາສາລາວ (Lao language)",
-                aiSystemInstruction: "ຕອບເປັນພາສາລາວເທົ່ານັ້ນ. ໃຫ້ຄຳແນະນຳທີ່ເປັນປະໂຫຍດ ແລະ ສາມາດນຳໄປປະຕິບັດໄດ້ຈິງ.",
-                reportTitle: "ບົດລາຍງານການປະເມີນຜົນການຝຶກອົບຮົມ Pre- and Post-Test analysis",
-                repSec1: "1. ຂໍ້ມູນທົ່ວໄປຂອງຜູ້ເຂົ້າຮ່ວມ",
-                repTotal: "ຈຳນວນການທົດສອບທັງໝົດ:",
-                repGender: "ອັດຕາສ່ວນຜູ້ເຂົ້າຮ່ວມ: ຍິງ",
-                repMale: "ຄົນ, ຊາຍ",
-                repPeople: "ຄົນ",
-                repSec2: "2. ສະຫຼຸບຜົນການທົດສອບ (KPIs)",
-                repPre: "ຄະແນນສະເລ່ຍກ່ອນການອົບຮົມ (Pre-test):",
-                repPost: "ຄະແນນສະເລ່ຍຫຼັງການອົບຮົມ (Post-test):",
-                repImprov: "ພັດທະນາການ (ຄວາມຮູ້ເພີ່ມຂຶ້ນ):",
-                repPoints: "ຄະແນນ",
-                repSec3: "3. ຈຸດທີ່ຄວນປັບປຸງ (ຄຳຖາມທີ່ຜູ້ເຂົ້າຮ່ວມຍັງມີຄວາມເຂົ້າໃຈໜ້ອຍ)",
-                repScore: "ຄະແນນຫຼັງອົບຮົມ",
-                repSec4: "4. ຂໍ້ສະເໜີແນະສຳລັບການອົບຮົມຄັ້ງຕໍ່ໄປ (ຈາກ AI ວິເຄາະ)",
-                repNoAi: "ຍັງບໍ່ໄດ້ສ້າງຄຳແນະນຳຈາກ AI ຫຼັງການວິເຄາະ. (ກະລຸນາກົດປຸ່ມ 'ສ້າງຄຳແນະນຳ' ໃນ Dashboard ກ່ອນ Export)"
-            },
-            en: {
-                appTitleDefault: "Pre- and Post-Test analysis",
-                exportBtn: "Export Report (.doc)",
-                exportExcelBtn: "Export Excel (.xlsx)",
-                clearBtn: "Clear Data",
-                provinceLabel: "Province:",
-                dateLabel: "Month/Year:",
-                allProvinces: "-- All --",
-                selectedItems: "selected",
-                allDates: "-- All --",
-                startAnalysis: "Start Analysis",
-                uploadDesc: "Please upload your Excel file (.xlsx, .xls) of the Pre/Post-test here.",
-                uploadBtn: "Upload Excel File",
-                totalParticipants: "Total Participants",
-                times: "records",
-                genderRatio: "Gender Ratio (F/M)",
-                genderDesc: "Female / Male (from all data)",
-                avgPre: "Average Score (Pre-test)",
-                avgPreSub: "Pre-test Average Score",
-                avgPost: "Average Score (Post-test)",
-                sumPre: "Total Sum (Pre-test)",
-                sumPost: "Total Sum (Post-test)",
-                femaleShort: "F:",
-                maleShort: "M:",
-                increased: "Increased by",
-                qTableTitle: "Correct Response Rate per Question (Pre vs Post)",
-                viewTable: "Table",
-                viewChart: "Chart",
-                translateLoading: "Translating questions...",
-                code: "Code",
-                qTopic: "Question Topic",
-                improvement: "Improvement",
-                aiTitle: "Weakness Analysis with Gemini AI",
-                aiDesc: "Topics where participants have the least understanding after training",
-                customPromptLabel: "Additional instructions for AI (Optional):",
-                customPromptPlaceholder: "e.g., Focus on practical exercises...",
-                generateAiBtn: "Generate Advice",
-                aiLoading: "Analyzing data and translating...",
-                aiError: "Cannot fetch data from AI at the moment. Please try again later.",
-                orgChartTitle: "Average Score Comparison by Organization Type",
-                preTestName: "Pre-test",
-                postTestName: "Post-test",
-                aiPromptLang: "in English",
-                aiSystemInstruction: "Answer in English only. Provide practical and actionable advice based on the data.",
-                reportTitle: "Pre- and Post-Test analysis Evaluation Report",
-                repSec1: "1. General Participant Information",
-                repTotal: "Total records:",
-                repGender: "Gender ratio: Female",
-                repMale: "persons, Male",
-                repPeople: "persons",
-                repSec2: "2. Test Results Summary (KPIs)",
-                repPre: "Average Pre-test score:",
-                repPost: "Average Post-test score:",
-                repImprov: "Improvement (knowledge gain):",
-                repPoints: "points",
-                repSec3: "3. Areas for Improvement (Lowest scoring questions)",
-                repScore: "Post-test score",
-                repSec4: "4. Recommendations for Future Training (AI Analysis)",
-                repNoAi: "AI recommendation has not been generated yet. (Please click 'Generate Advice' in the Dashboard before exporting)"
-            }
-        };
-
-        // Helper function for API calls with Exponential Backoff
-        const fetchWithRetry = async (url, options, retries = 5) => {
-            const delays = [1000, 2000, 4000, 8000, 16000];
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    return await response.json();
-                } catch (error) {
-                    if (i === retries - 1) throw error;
-                    await new Promise(res => setTimeout(res, delays[i]));
-                }
-            }
-        };
-
-        const App = () => {
-            const [lang, setLang] = useState('lo'); // State ສຳລັບພາສາ
-            const t = translations[lang];
-
-            const [qViewMode, setQViewMode] = useState('table'); // 'table' or 'chart'
-
-            const [rawData, setRawData] = useState([]);
-            const [filteredData, setFilteredData] = useState([]);
-            const [provinces, setProvinces] = useState([]);
-            
-            // ປ່ຽນການເກັບຂໍ້ມູນແຂວງມາເປັນແບບ Array ເພື່ອຮອງຮັບ Multi-select
-            const [selectedProvinces, setSelectedProvinces] = useState([]);
-            const [isProvOpen, setIsProvOpen] = useState(false);
-            
-            const [provinceKey, setProvinceKey] = useState("province");
-            
-            // New Date Filter States
-            const [monthYears, setMonthYears] = useState([]);
-            const [selectedMonthYear, setSelectedMonthYear] = useState("All");
-
-            const [dashboardTitle, setDashboardTitle] = useState(translations['lo'].appTitleDefault);
-            
-            const [questionsMap, setQuestionsMap] = useState([]);
-            const [maxScore, setMaxScore] = useState(0);
-            
-            const [customInstruction, setCustomInstruction] = useState("");
-            const [aiRecommendation, setAiRecommendation] = useState("");
-            const [isAiLoading, setIsAiLoading] = useState(false);
-            const [aiError, setAiError] = useState("");
-            const [sortConfig, setSortConfig] = useState({ key: 'key', direction: 'asc' });
-            
-            // ປັບປຸງ State ສຳລັບເກັບ Dynamic Keys
-            const [totalScoreKey, setTotalScoreKey] = useState("Total score");
-            const [prePostKey, setPrePostKey] = useState("Is this pre or post test?");
-            const [genderKey, setGenderKey] = useState("Gender");
-
-            const [isTranslatingQuestions, setIsTranslatingQuestions] = useState(false);
-            const isTranslatingRef = useRef(false);
-
-            // --- 1. File Upload & Data Processing ---
-            const handleFileUpload = (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    // ປ່ຽນຊື່ Title ຕາມຊື່ໄຟລ໌
-                    const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-                    const newTitle = `${fileNameWithoutExt} Pre/post test`;
-                    setDashboardTitle(newTitle);
-                    document.title = newTitle;
-
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = window.XLSX.read(data, { type: 'array' });
-                        const firstSheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[firstSheetName];
-                        // Convert to JSON with raw: false to ensure dates are strings
-                        const json = window.XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
-                        if (json.length > 0) {
-                            const headers = Object.keys(json[0]);
-                            processExcelData(json, headers);
-                        }
-                    };
-                    reader.readAsArrayBuffer(file);
-                }
-            };
-
-            const processExcelData = (data, headers) => {
-                // Find dynamic cal columns (ຮອງຮັບແບບມີຍະຫວ່າງ ເຊັ່ນ cal 1)
-                const calCols = headers.filter(h => /^cal\s*\d+/i.test(h));
-                
-                // ຈັດລຽງຄຳຖາມ (cal1, cal2, cal3...) ແຕ່ໜ້ອຍຫາໃຫຍ່
-                calCols.sort((a, b) => {
-                    const numA = parseInt(a.match(/\d+/)?.[0] || 0);
-                    const numB = parseInt(b.match(/\d+/)?.[0] || 0);
-                    return numA - numB;
-                });
-
-                // ຊອກຫາ Column ທີ່ຢູ່ຖັດຈາກ cal ໂຕສຸດທ້າຍ ເພື່ອໃຊ້ເປັນ ຄະແນນລວມ
-                let maxCalIndex = -1;
-                calCols.forEach(cal => {
-                    const idx = headers.indexOf(cal);
-                    if (idx > maxCalIndex) {
-                        maxCalIndex = idx;
-                    }
-                });
-
-                let tScoreKey = "Total score";
-                if (maxCalIndex !== -1 && maxCalIndex + 1 < headers.length) {
-                    tScoreKey = headers[maxCalIndex + 1];
-                } else {
-                    // Fallback: ຖ້າຫາບໍ່ເຫັນ ໃຫ້ຊອກຫາຄຳວ່າ total score (ແບບບໍ່ສົນໃຈຍະຫວ່າງ/ໂຕນ້ອຍໂຕໃຫຍ່)
-                    const fallback = headers.find(h => h.toLowerCase().includes('total') && h.toLowerCase().includes('score'));
-                    if (fallback) tScoreKey = fallback;
-                }
-                setTotalScoreKey(tScoreKey);
-
-                // ຊອກຫາຖັນ Pre/Post Test
-                const ppKey = headers.find(h => h.toLowerCase().includes('pre') && h.toLowerCase().includes('post')) || 'Is this pre or post test?';
-                setPrePostKey(ppKey);
-
-                // ຊອກຫາຖັນ Gender
-                const gKey = headers.find(h => h.toLowerCase().trim() === 'gender' || h.toLowerCase().trim() === 'ເພດ') || 'Gender';
-                setGenderKey(gKey);
-
-                const qMap = [];
-                calCols.forEach(cal => {
-                    const numMatch = cal.match(/\d+/);
-                    if (numMatch) {
-                        const num = numMatch[0];
-                        // ຊອກຫາຖັນຄຳຖາມທີ່ມີຕົວເລກກົງກັນ (ຮອງຮັບ "11.", "11 ", "Q11", " 11.", ຫຼື "11")
-                        const qText = headers.find(h => {
-                            const cleanH = h.trim();
-                            const regex = new RegExp(`^Q?\\s*${num}(?:[\\.\\)\\s:_-]|$)`, 'i');
-                            return regex.test(cleanH);
-                        }) || `Question ${num}`;
-                        
-                        // ບັນທຶກທັງພາສາອັງກິດຕົ້ນສະບັບ ແລະ ກຽມຊ່ອງຫວ່າງໄວ້ສຳລັບພາສາລາວ
-                        qMap.push({ key: cal, originalText: qText, translatedText: null });
-                    }
-                });
-                
-                setQuestionsMap(qMap);
-                setMaxScore(calCols.length);
-
-                // ຊອກຫາຖັນ province ທຳອິດນັບຈາກຊ້າຍໄປຂວາ
-                const pKey = headers.find(h => h.toLowerCase().trim() === 'province') || 'province';
-                setProvinceKey(pKey);
-
-                // ຊອກຫາຖັນ Date ໂດຍເອົາສະເພາະ "Date:" ຕາມທີ່ກຳນົດ
-                const dKey = headers.find(h => h.trim() === 'Date:');
-
-                // ເພີ່ມຊ່ອງ _monthYear ເຂົ້າໃນທຸກແຖວ
-                const enrichedData = data.map(row => {
-                    let my = "";
-                    if (dKey && row[dKey]) {
-                        const val = row[dKey];
-                        const d = new Date(val);
-                        if (!isNaN(d.getTime())) {
-                            const m = String(d.getMonth() + 1).padStart(2, '0');
-                            my = `${m}/${d.getFullYear()}`;
-                        } else {
-                            // ກໍລະນີອ່ານມາເປັນ String ແລ້ວແປງ Date() ບໍ່ໄດ້ ໃຫ້ລອງໃຊ້ Regex ດຶງ YYYY-MM
-                            const match = String(val).match(/(\d{4})-(\d{2})/);
-                            if (match) my = `${match[2]}/${match[1]}`;
-                        }
-                    }
-                    return { ...row, _monthYear: my || "Unknown" };
-                });
-
-                // Extract unique provinces ໂດຍໃຊ້ pKey
-                const uniqueProvinces = [...new Set(enrichedData.map(row => row[pKey]).filter(Boolean))];
-                setProvinces(uniqueProvinces.sort());
-
-                // Extract unique Month-Years
-                const uniqueMonthYears = [...new Set(enrichedData.map(row => row._monthYear).filter(x => x !== "Unknown" && x !== ""))];
-                setMonthYears(uniqueMonthYears.sort());
-
-                setRawData(enrichedData);
-                setFilteredData(enrichedData);
-            };
-
-            // --- Function Clear Data ---
-            const clearData = () => {
-                setRawData([]);
-                setFilteredData([]);
-                setProvinces([]);
-                setMonthYears([]);
-                setSelectedProvinces([]);
-                setIsProvOpen(false);
-                setSelectedMonthYear("All");
-                setQuestionsMap([]);
-                setMaxScore(0);
-                setAiRecommendation("");
-                setCustomInstruction("");
-                setAiError("");
-                setSortConfig({ key: 'key', direction: 'asc' });
-                setQViewMode('table');
-                setTotalScoreKey("Total score");
-                setPrePostKey("Is this pre or post test?");
-                setGenderKey("Gender");
-                
-                // ຣີເຊັດ Title
-                setDashboardTitle(translations[lang].appTitleDefault);
-                document.title = translations[lang].appTitleDefault;
-                
-                // ລ້າງຄ່າໃນ Input File ເພື່ອໃຫ້ສາມາດອັບໂຫຼດໄຟລ໌ເດີມຊ້ຳໄດ້
-                const fileInput = document.getElementById("fileUploadInput");
-                if (fileInput) fileInput.value = "";
-            };
-
-            // --- Function Translate Questions Auto ---
-            const translateQuestionsAuto = async () => {
-                if (questionsMap.length === 0) return;
-                
-                isTranslatingRef.current = true;
-                setIsTranslatingQuestions(true);
-                
-                try {
-                    const prompt = "Translate the following list of questions into Lao language. Maintain the exact meaning. Respond ONLY with a valid JSON object containing an array of the translated strings under the key 'translations'.";
-                    const questionsList = questionsMap.map((q, i) => `${i+1}. ${q.originalText}`).join('\n');
-                    const fullPrompt = `${prompt}\n\nQuestions:\n${questionsList}`;
-
-                    const payload = {
-                        contents: [{ parts: [{ text: fullPrompt }] }],
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            responseSchema: {
-                                type: "OBJECT",
-                                properties: {
-                                    translations: {
-                                        type: "ARRAY",
-                                        items: { type: "STRING" }
-                                    }
-                                }
-                            }
-                        }
-                    };
-
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                    const result = await fetchWithRetry(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (textResponse) {
-                        const parsed = JSON.parse(textResponse);
-                        if (parsed.translations && parsed.translations.length === questionsMap.length) {
-                            const newQMap = questionsMap.map((q, i) => ({
-                                ...q,
-                                translatedText: parsed.translations[i] 
-                            }));
-                            setQuestionsMap(newQMap);
-                        }
-                    }
-                } catch (error) {
-                    console.error("Translation Error:", error);
-                } finally {
-                    setIsTranslatingQuestions(false);
-                    isTranslatingRef.current = false;
-                }
-            };
-
-            // --- Effect: Auto-translate when language is set to 'lo' ---
-            useEffect(() => {
-                if (lang === 'lo' && questionsMap.length > 0) {
-                    // ກວດສອບວ່າຍັງບໍ່ທັນມີຄຳແປ ແລະ ບໍ່ໄດ້ກຳລັງແປຢູ່
-                    if (questionsMap[0].translatedText === null && !isTranslatingRef.current) {
-                        translateQuestionsAuto();
-                    }
-                }
-            }, [lang, questionsMap]);
-
-
-            // --- Filter Effect (Province & Date) ---
-            useEffect(() => {
-                let result = rawData;
-                
-                // ຖ້າມີການເລືອກແຂວງ ຫຼາຍກວ່າ 0 ໃຫ້ Filter ຕາມລາຍຊື່ທີ່ເລືອກ
-                if (selectedProvinces.length > 0) {
-                    result = result.filter(row => selectedProvinces.includes(row[provinceKey]));
-                }
-                
-                if (selectedMonthYear !== "All") {
-                    result = result.filter(row => row._monthYear === selectedMonthYear);
-                }
-                
-                setFilteredData(result);
-                // Reset AI when filter or language changes
-                setAiRecommendation("");
-            }, [selectedProvinces, selectedMonthYear, rawData, provinceKey, lang]);
-
-            // --- 2. Calculate KPIs ---
-            const kpis = useMemo(() => {
-                const preData = filteredData.filter(d => String(d[prePostKey] || '').toLowerCase().includes('pre'));
-                const postData = filteredData.filter(d => String(d[prePostKey] || '').toLowerCase().includes('post'));
-                
-                // Function ແປງຄະແນນໃຫ້ເປັນຕົວເລກ (ປ້ອງກັນ string ທີ່ມີ comma ຫຼື ຍະຫວ່າງ)
-                const parseScore = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
-                const round2 = (num) => Math.round(num * 100) / 100;
-
-                const getAvg = (dataArr) => {
-                    if (dataArr.length === 0) return "0.00";
-                    const sum = dataArr.reduce((acc, row) => acc + parseScore(row[totalScoreKey]), 0);
-                    return (sum / dataArr.length).toFixed(2);
-                };
-
-                const isMale = (g) => g === 'male' || g === 'm' || g === 'ຊາຍ';
-                const isFemale = (g) => g === 'female' || g === 'f' || g === 'ຍິງ';
-
-                const males = filteredData.filter(d => isMale(String(d[genderKey] || '').toLowerCase())).length;
-                const females = filteredData.filter(d => isFemale(String(d[genderKey] || '').toLowerCase())).length;
-
-                const getSumByGender = (dataArr, genderTarget) => {
-                    const filtered = dataArr.filter(d => {
-                        const g = String(d[genderKey] || '').toLowerCase();
-                        if (genderTarget === 'female') return isFemale(g);
-                        if (genderTarget === 'male') return isMale(g);
-                        return false;
-                    });
-                    return filtered.reduce((acc, row) => acc + parseScore(row[totalScoreKey]), 0);
-                };
-
-                const preSumTotal = preData.reduce((acc, row) => acc + parseScore(row[totalScoreKey]), 0);
-                const preSumFemale = getSumByGender(preData, 'female');
-                const preSumMale = getSumByGender(preData, 'male');
-                
-                const postSumTotal = postData.reduce((acc, row) => acc + parseScore(row[totalScoreKey]), 0);
-                const postSumFemale = getSumByGender(postData, 'female');
-                const postSumMale = getSumByGender(postData, 'male');
-
-                return {
-                    total: filteredData.length,
-                    males,
-                    females,
-                    preCount: preData.length,
-                    postCount: postData.length,
-                    preAvg: getAvg(preData),
-                    postAvg: getAvg(postData),
-                    preSumTotal: round2(preSumTotal),
-                    preSumFemale: round2(preSumFemale),
-                    preSumMale: round2(preSumMale),
-                    postSumTotal: round2(postSumTotal),
-                    postSumFemale: round2(postSumFemale),
-                    postSumMale: round2(postSumMale)
-                };
-            }, [filteredData, totalScoreKey, prePostKey, genderKey]);
-
-            // --- 3. Question Analysis (Table Data) ---
-            const questionStats = useMemo(() => {
-                if (questionsMap.length === 0 || filteredData.length === 0) return [];
-
-                const preData = filteredData.filter(d => String(d[prePostKey] || '').toLowerCase().includes('pre'));
-                const postData = filteredData.filter(d => String(d[prePostKey] || '').toLowerCase().includes('post'));
-
-                const calcPercent = (dataArr, calKey) => {
-                    if (dataArr.length === 0) return 0;
-                    const sum = dataArr.reduce((acc, row) => acc + (parseInt(row[calKey]) || 0), 0);
-                    return ((sum / dataArr.length) * 100).toFixed(1);
-                };
-
-                const stats = questionsMap.map(q => {
-                    const prePercent = parseFloat(calcPercent(preData, q.key));
-                    const postPercent = parseFloat(calcPercent(postData, q.key));
-                    
-                    // ເລືອກສະແດງຄຳຖາມຕາມພາສາ (ຖ້າເປັນ 'lo' ແລະ ມີຄຳແປແລ້ວ ໃຫ້ໃຊ້ພາສາລາວ)
-                    const displayText = (lang === 'lo' && q.translatedText) ? q.translatedText : q.originalText;
-
-                    return {
-                        ...q,
-                        text: displayText,
-                        prePercent,
-                        postPercent,
-                        improvement: (postPercent - prePercent).toFixed(1)
-                    };
-                });
-
-                return stats;
-            }, [filteredData, questionsMap, lang, prePostKey]);
-
-            // Get bottom 3-5 questions
-            const bottomQuestions = useMemo(() => {
-                return [...questionStats].sort((a, b) => a.postPercent - b.postPercent).slice(0, 4); 
-            }, [questionStats]);
-
-            // Data ສຳລັບຕາລາງທີ່ສາມາດ Sort ໄດ້
-            const sortedQuestionStats = useMemo(() => {
-                let sortableItems = [...questionStats];
-                if (sortConfig !== null) {
-                    sortableItems.sort((a, b) => {
-                        let aVal = a[sortConfig.key];
-                        let bVal = b[sortConfig.key];
-
-                        if (sortConfig.key === 'key') {
-                            aVal = parseInt(String(aVal).match(/\d+/)?.[0] || 0);
-                            bVal = parseInt(String(bVal).match(/\d+/)?.[0] || 0);
-                        } else if (sortConfig.key === 'improvement') {
-                            aVal = parseFloat(aVal);
-                            bVal = parseFloat(bVal);
-                        } else if (typeof aVal === 'string') {
-                            aVal = aVal.toLowerCase();
-                            bVal = bVal.toLowerCase();
-                        }
-
-                        if (aVal < bVal) {
-                            return sortConfig.direction === 'asc' ? -1 : 1;
-                        }
-                        if (aVal > bVal) {
-                            return sortConfig.direction === 'asc' ? 1 : -1;
-                        }
-                        return 0;
-                    });
-                }
-                return sortableItems;
-            }, [questionStats, sortConfig]);
-
-            const requestSort = (key) => {
-                let direction = 'asc';
-                if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-                    direction = 'desc';
-                }
-                setSortConfig({ key, direction });
-            };
-
-            // Custom Tooltip ສຳລັບກຣາຟຄຳຖາມ
-            const QuestionTooltip = ({ active, payload }) => {
-                if (active && payload && payload.length) {
-                    const data = payload[0].payload;
-                    return (
-                        <div className="bg-white p-3 border border-gray-200 rounded shadow-md text-sm max-w-[250px]">
-                            <p className="font-bold text-gray-800 mb-1">{String(data.key).toUpperCase()}</p>
-                            <p className="text-gray-600 mb-3 text-xs border-b pb-2">{data.text}</p>
-                            <p className="text-yellow-600 font-medium">Pre-test: {data.prePercent}%</p>
-                            <p className="text-green-600 font-medium">Post-test: {data.postPercent}%</p>
-                            <p className={`font-bold mt-1 ${data.improvement > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                {t.improvement}: {data.improvement > 0 ? '+' : ''}{data.improvement}%
-                            </p>
-                        </div>
-                    );
-                }
-                return null;
-            };
-
-            // --- 4. Organization Analysis ---
-            const orgStats = useMemo(() => {
-                if (filteredData.length === 0) return [];
-                
-                const sampleRow = filteredData[0];
-                const keys = Object.keys(sampleRow);
-                const oKey = keys.find(k => k.toLowerCase().includes('organization') || k.toLowerCase().includes('ອົງການ')) || 'Organization type:';
-
-                const parseScore = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
-                const round2 = (num) => Math.round(num * 100) / 100;
-
-                const orgs = {};
-                filteredData.forEach(row => {
-                    const org = row[oKey] || 'Unknown';
-                    const isPre = String(row[prePostKey] || '').toLowerCase().includes('pre');
-                    const score = parseScore(row[totalScoreKey]);
-
-                    if (!orgs[org]) orgs[org] = { org, preSum: 0, preCount: 0, postSum: 0, postCount: 0 };
-                    
-                    if (isPre) {
-                        orgs[org].preSum += score;
-                        orgs[org].preCount += 1;
-                    } else {
-                        orgs[org].postSum += score;
-                        orgs[org].postCount += 1;
-                    }
-                });
-
-                return Object.values(orgs).map(o => ({
-                    name: o.org,
-                    Pre_test: o.preCount ? round2(o.preSum / o.preCount) : 0,
-                    Post_test: o.postCount ? round2(o.postSum / o.postCount) : 0,
-                })).filter(o => o.Pre_test > 0 || o.Post_test > 0);
-            }, [filteredData, totalScoreKey, prePostKey]);
-
-            // --- 5. Ask Gemini ---
-            const getAIRecommendation = async () => {
-                if (bottomQuestions.length === 0) return;
-                
-                setIsAiLoading(true);
-                setAiError("");
-                setAiRecommendation("");
-
-                const questionTextList = bottomQuestions.map((q, i) => `${i+1}. ${q.text} (${t.repScore}: ${q.postPercent}%)`).join('\n');
-                
-                const customPart = customInstruction.trim() ? `\n\nAdditional user instructions to consider for your advice:\n"${customInstruction.trim()}"` : "";
-
-                const prompt = `
-                    As a Pre- and Post-Test analysis training expert.
-                    These are the test questions where participants scored the lowest (bottom ${bottomQuestions.length}) after the training:
-                    
-                    ${questionTextList}
-                    ${customPart}
-                    
-                    Please write brief, concise advice (max 3 paragraphs) ${t.aiPromptLang} 
-                    suggesting how trainers should improve their teaching methods or what topics to emphasize more in the next session for these specific topics.
-                    Ensure your final response is translated entirely into ${t.aiPromptLang}.
-                `;
-
-                try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                    const payload = {
-                        contents: [{ parts: [{ text: prompt }] }],
-                        systemInstruction: { parts: [{ text: t.aiSystemInstruction }] }
-                    };
-
-                    const result = await fetchWithRetry(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (text) {
-                        setAiRecommendation(text);
-                    } else {
-                        throw new Error("Invalid response format");
-                    }
-                } catch (error) {
-                    console.error("AI Error:", error);
-                    setAiError(t.aiError);
-                } finally {
-                    setIsAiLoading(false);
-                }
-            };
-
-            // --- 6. Export Narrative Report ---
-            const exportNarrativeReport = () => {
-                const aiText = aiRecommendation 
-                    ? aiRecommendation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>') 
-                    : t.repNoAi;
-                
-                // ເພີ່ມສ່ວນສະແດງຄຳແນະນຳທາງເລືອກເຂົ້າໃນບົດລາຍງານ
-                const customInstructionHtml = customInstruction.trim() 
-                    ? `<p style="color: #4b5563; font-style: italic; font-size: 0.9em;">* ${t.customPromptLabel} ${customInstruction}</p>` 
-                    : "";
-                
-                const htmlContent = `
-                    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-                    <head><meta charset='utf-8'><title>${dashboardTitle}</title></head>
-                    <body style="font-family: 'Phetsarath OT', 'Saysettha OT', sans-serif;">
-                        <h2 style="text-align: center;">${t.reportTitle}</h2>
-                        <h3 style="text-align: center; color: #1e40af;">${dashboardTitle}</h3>
-                        <br/>
-                        <h3>${t.repSec1}</h3>
-                        <ul>
-                            <li>${t.repTotal} ${kpis.total} ${t.times} (Pre-test: ${kpis.preCount}, Post-test: ${kpis.postCount})</li>
-                            <li>${t.repGender} ${kpis.females} ${t.repMale} ${kpis.males} ${t.repPeople}</li>
-                        </ul>
-                        <h3>${t.repSec2}</h3>
-                        <ul>
-                            <li>${t.repPre} ${kpis.preAvg} / ${maxScore}</li>
-                            <li>${t.repPost} ${kpis.postAvg} / ${maxScore}</li>
-                            <li>${t.sumPre}: ${kpis.preSumTotal} (${t.femaleShort} ${kpis.preSumFemale}, ${t.maleShort} ${kpis.preSumMale})</li>
-                            <li>${t.sumPost}: ${kpis.postSumTotal} (${t.femaleShort} ${kpis.postSumFemale}, ${t.maleShort} ${kpis.postSumMale})</li>
-                            <li>${t.repImprov} +${(kpis.postAvg - kpis.preAvg).toFixed(2)} ${t.repPoints}</li>
-                        </ul>
-                        <h3>${t.repSec3}</h3>
-                        <ul>
-                            ${bottomQuestions.map(q => `<li>${q.text} (${t.repScore}: ${q.postPercent}%)</li>`).join('')}
-                        </ul>
-                        <h3>${t.repSec4}</h3>
-                        ${customInstructionHtml}
-                        <p>${aiText}</p>
-                    </body>
-                    </html>
-                `;
-
-                const blob = new Blob(['\ufeff', htmlContent], {
-                    type: 'application/msword'
-                });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                
-                // ຕັ້ງຊື່ໄຟລ໌ຕາມ dashboardTitle ແລະ ຕັດຕົວອັກສອນພິເສດທີ່ອາດຈະມີບັນຫາໃນການຕັ້ງຊື່ໄຟລ໌
-                const safeFileName = dashboardTitle.replace(/[^a-zA-Z0-9\u0E80-\u0EFF\s_-]/g, "_").trim();
-                link.download = `${safeFileName || 'Export'}_Report_${lang.toUpperCase()}.doc`;
-                
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            };
-
-            // --- 7. Export Excel Report (Single Sheet) ---
-            const exportExcelReport = () => {
-                const wb = window.XLSX.utils.book_new();
-                const wsData = []; // ອາເຣ (Array) ສຳລັບເກັບຂໍ້ມູນທຸກແຖວ
-
-                // 1. KPI Section
-                wsData.push([`--- KPI Summary ---`]);
-                wsData.push(["Metric", "Value"]);
-                wsData.push([t.totalParticipants, kpis.total]);
-                wsData.push(["Pre-test Count", kpis.preCount]);
-                wsData.push(["Post-test Count", kpis.postCount]);
-                wsData.push(["Females", kpis.females]);
-                wsData.push(["Males", kpis.males]);
-                wsData.push([t.avgPre, kpis.preAvg]);
-                wsData.push([t.avgPost, kpis.postAvg]);
-                wsData.push([t.sumPre, kpis.preSumTotal]);
-                wsData.push([`${t.sumPre} (${t.femaleShort.replace(':', '')})`, kpis.preSumFemale]);
-                wsData.push([`${t.sumPre} (${t.maleShort.replace(':', '')})`, kpis.preSumMale]);
-                wsData.push([t.sumPost, kpis.postSumTotal]);
-                wsData.push([`${t.sumPost} (${t.femaleShort.replace(':', '')})`, kpis.postSumFemale]);
-                wsData.push([`${t.sumPost} (${t.maleShort.replace(':', '')})`, kpis.postSumMale]);
-                wsData.push([t.increased, (kpis.postAvg - kpis.preAvg).toFixed(2)]);
-                
-                // ຍະຫວ່າງ 2 ແຖວ
-                wsData.push([]); 
-                wsData.push([]);
-
-                // 2. Questions Section
-                wsData.push([`--- ${t.qTableTitle} ---`]);
-                wsData.push([t.code, t.qTopic, "Pre-test (%)", "Post-test (%)", t.improvement]);
-                questionStats.forEach(q => {
-                    wsData.push([
-                        q.key.toUpperCase(),
-                        q.text,
-                        q.prePercent,
-                        q.postPercent,
-                        q.improvement
-                    ]);
-                });
-
-                // ຍະຫວ່າງ 2 ແຖວ
-                wsData.push([]);
-                wsData.push([]);
-
-                // 3. Organization Section
-                wsData.push([`--- ${t.orgChartTitle} ---`]);
-                wsData.push(["Organization", t.preTestName, t.postTestName]);
-                orgStats.forEach(o => {
-                    wsData.push([
-                        o.name,
-                        o.Pre_test,
-                        o.Post_test
-                    ]);
-                });
-
-                // ສ້າງ Sheet ດຽວຈາກຂໍ້ມູນທັງໝົດທີ່ລວມກັນໄວ້
-                const ws = window.XLSX.utils.aoa_to_sheet(wsData);
-                window.XLSX.utils.book_append_sheet(wb, ws, "Analysis Report");
-
-                // Generate filename safely
-                const safeFileName = dashboardTitle.replace(/[^a-zA-Z0-9\u0E80-\u0EFF\s_-]/g, "_").trim();
-                window.XLSX.writeFile(wb, `${safeFileName || 'Export'}_Data_${lang.toUpperCase()}.xlsx`);
-            };
-
-            return (
-                <div className="pb-8 h-full bg-gray-50 flex flex-col min-h-[600px]">
-                    {/* Header bar */}
-                    <nav className="bg-blue-800 text-white shadow-md p-4 sticky top-0 z-50">
-                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                            <h1 className="text-xl lg:text-2xl font-bold flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-                                {dashboardTitle}
-                            </h1>
-                            
-                            <div className="flex flex-wrap items-center gap-3">
-                                {/* Language Switcher */}
-                                <div className="flex bg-blue-700 rounded p-1 shadow-inner">
-                                    <button 
-                                        onClick={() => setLang('lo')} 
-                                        className={`px-3 py-1 text-sm rounded transition ${lang === 'lo' ? 'bg-white text-blue-800 font-bold shadow' : 'text-blue-100 hover:text-white'}`}
-                                    >
-                                        ລາວ
-                                    </button>
-                                    <button 
-                                        onClick={() => setLang('en')} 
-                                        className={`px-3 py-1 text-sm rounded transition ${lang === 'en' ? 'bg-white text-blue-800 font-bold shadow' : 'text-blue-100 hover:text-white'}`}
-                                    >
-                                        EN
-                                    </button>
-                                </div>
-
-                                {rawData.length > 0 && (
-                                    <>
-                                        <button 
-                                            onClick={clearData}
-                                            className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1.5 rounded flex items-center gap-2 shadow transition"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                                            {t.clearBtn}
-                                        </button>
-                                        <button 
-                                            onClick={exportNarrativeReport}
-                                            className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1.5 rounded flex items-center gap-2 shadow transition"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M15 18a3 3 0 1 0-6 0"/><path d="M15 18v-8a3 3 0 1 0-6 0v8"/><path d="M15 18a3 3 0 1 1-6 0"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
-                                            {t.exportBtn}
-                                        </button>
-                                        <button 
-                                            onClick={exportExcelReport}
-                                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-3 py-1.5 rounded flex items-center gap-2 shadow transition"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>
-                                            {t.exportExcelBtn}
-                                        </button>
-                                    </>
-                                )}
-                                
-                                {/* Province Multi-Select Filter */}
-                                <div className="bg-blue-700 rounded p-1 flex items-center">
-                                    <label className="text-sm font-medium mr-2 ml-2">{t.provinceLabel}</label>
-                                    <div className="relative">
-                                        <div 
-                                            className="bg-white text-black text-sm rounded px-2 py-1 outline-none min-w-[150px] max-w-[200px] cursor-pointer flex justify-between items-center"
-                                            onClick={() => setIsProvOpen(!isProvOpen)}
-                                        >
-                                            <span className="truncate pr-2 select-none">
-                                                {selectedProvinces.length === 0 
-                                                    ? t.allProvinces 
-                                                    : `${selectedProvinces.length} ${t.selectedItems}`}
-                                            </span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                                        </div>
-
-                                        {isProvOpen && (
-                                            <>
-                                                <div className="fixed inset-0 z-40" onClick={() => setIsProvOpen(false)}></div>
-                                                <div className="absolute z-50 mt-1 right-0 sm:left-0 w-full min-w-[200px] bg-white border border-gray-200 rounded shadow-lg max-h-60 overflow-y-auto text-black text-sm">
-                                                    <label className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer border-b font-medium transition">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            checked={selectedProvinces.length === 0}
-                                                            onChange={() => setSelectedProvinces([])}
-                                                            className="mr-3 w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                                                        />
-                                                        <span className="select-none">{t.allProvinces}</span>
-                                                    </label>
-                                                    {provinces.map(p => (
-                                                        <label key={p} className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer transition">
-                                                            <input 
-                                                                type="checkbox" 
-                                                                checked={selectedProvinces.includes(p)}
-                                                                onChange={() => {
-                                                                    if (selectedProvinces.includes(p)) {
-                                                                        setSelectedProvinces(selectedProvinces.filter(prov => prov !== p));
-                                                                    } else {
-                                                                        setSelectedProvinces([...selectedProvinces, p]);
-                                                                    }
-                                                                }}
-                                                                className="mr-3 w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                                                            />
-                                                            <span className="select-none">{p}</span>
-                                                        </label>
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="bg-blue-700 rounded p-1 flex items-center">
-                                    <label className="text-sm font-medium mr-2 ml-2">{t.dateLabel}</label>
-                                    <select 
-                                        className="bg-white text-black text-sm rounded px-2 py-1 outline-none max-w-[120px] truncate"
-                                        value={selectedMonthYear}
-                                        onChange={(e) => setSelectedMonthYear(e.target.value)}
-                                    >
-                                        <option value="All">{t.allDates}</option>
-                                        {monthYears.map(my => <option key={my} value={my}>{my}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </nav>
-
-                    <div className="max-w-7xl mx-auto mt-6 px-4 w-full flex-1">
-                        {/* File Upload Section */}
-                        {rawData.length === 0 && (
-                            <div className="bg-white p-8 rounded-xl shadow-sm text-center border-2 border-dashed border-gray-300 mb-6">
-                                <h2 className="text-xl font-semibold mb-2">{t.startAnalysis}</h2>
-                                <p className="text-gray-500 mb-4">{t.uploadDesc}</p>
-                                <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow transition inline-flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                                    {t.uploadBtn}
-                                    <input id="fileUploadInput" type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="hidden" />
-                                </label>
-                            </div>
-                        )}
-
-                        {rawData.length > 0 && (
-                            <div className="space-y-6">
-                                {/* ພາກທີ 1: KPIs ຫຼັກ */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
-                                        <div className="text-gray-500 text-sm font-medium">{t.totalParticipants}</div>
-                                        <div className="text-3xl font-bold text-gray-800">{kpis.total} <span className="text-sm font-normal text-gray-500">{t.times}</span></div>
-                                        <div className="text-xs text-gray-400 mt-1">Pre: {kpis.preCount} | Post: {kpis.postCount}</div>
-                                    </div>
-                                    <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-pink-500">
-                                        <div className="text-gray-500 text-sm font-medium">{t.genderRatio}</div>
-                                        <div className="text-3xl font-bold text-gray-800 flex items-baseline gap-2">
-                                            <span className="text-pink-500">{kpis.females}</span>
-                                            <span className="text-lg text-gray-400">/</span>
-                                            <span className="text-blue-500">{kpis.males}</span>
-                                        </div>
-                                        <div className="text-xs text-gray-400 mt-1">{t.genderDesc}</div>
-                                    </div>
-                                    <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-yellow-500">
-                                        <div className="text-gray-500 text-sm font-medium">{t.avgPre}</div>
-                                        <div className="text-3xl font-bold text-gray-800">{kpis.preAvg} <span className="text-sm font-normal text-gray-500">/ {maxScore}</span></div>
-                                        <div className="text-xs text-gray-400 mt-1">{t.avgPreSub}</div>
-                                    </div>
-                                    <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
-                                        <div className="text-gray-500 text-sm font-medium">{t.avgPost}</div>
-                                        <div className="text-3xl font-bold text-gray-800">{kpis.postAvg} <span className="text-sm font-normal text-gray-500">/ {maxScore}</span></div>
-                                        <div className="text-xs text-green-600 font-medium mt-1 flex items-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-                                            {t.increased} +{(kpis.postAvg - kpis.preAvg).toFixed(2)}
-                                        </div>
-                                    </div>
-                                    <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
-                                        <div className="text-gray-500 text-sm font-medium">{t.sumPre}</div>
-                                        <div className="text-3xl font-bold text-gray-800">{kpis.preSumTotal}</div>
-                                        <div className="text-xs text-gray-500 mt-1 flex justify-between items-center bg-gray-50 px-2 py-1 rounded">
-                                            <span>{t.femaleShort} <span className="font-semibold text-pink-500">{kpis.preSumFemale}</span></span>
-                                            <span>{t.maleShort} <span className="font-semibold text-blue-500">{kpis.preSumMale}</span></span>
-                                        </div>
-                                    </div>
-                                    <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-teal-500">
-                                        <div className="text-gray-500 text-sm font-medium">{t.sumPost}</div>
-                                        <div className="text-3xl font-bold text-gray-800">{kpis.postSumTotal}</div>
-                                        <div className="text-xs text-gray-500 mt-1 flex justify-between items-center bg-gray-50 px-2 py-1 rounded">
-                                            <span>{t.femaleShort} <span className="font-semibold text-pink-500">{kpis.postSumFemale}</span></span>
-                                            <span>{t.maleShort} <span className="font-semibold text-blue-500">{kpis.postSumMale}</span></span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    {/* ຕາລາງປຽບທຽບລາຍຄຳຖາມ */}
-                                    <div className="lg:col-span-2 bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
-                                        <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center flex-wrap gap-2">
-                                            <div className="flex items-center gap-3">
-                                                <h3 className="font-semibold text-gray-800">{t.qTableTitle}</h3>
-                                                {isTranslatingQuestions && (
-                                                    <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded flex items-center gap-1">
-                                                        <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                                        {t.translateLoading}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                {qViewMode === 'table' && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Click Header to Sort</span>}
-                                                <div className="flex bg-gray-200 rounded p-0.5">
-                                                    <button 
-                                                        onClick={() => setQViewMode('table')} 
-                                                        className={`px-3 py-1 text-xs rounded transition ${qViewMode === 'table' ? 'bg-white text-gray-800 font-bold shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                                    >
-                                                        {t.viewTable}
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => setQViewMode('chart')} 
-                                                        className={`px-3 py-1 text-xs rounded transition ${qViewMode === 'chart' ? 'bg-white text-gray-800 font-bold shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                                    >
-                                                        {t.viewChart}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        {qViewMode === 'table' ? (
-                                            <div className="overflow-x-auto custom-scrollbar flex-1">
-                                                <table className="w-full text-left border-collapse min-w-[600px]">
-                                                    <thead>
-                                                        <tr className="bg-gray-50 text-gray-600 text-sm select-none">
-                                                            <th className="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-200 transition" onClick={() => requestSort('key')}>
-                                                                <div className="flex items-center gap-1">{t.code} {sortConfig.key === 'key' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : <span className="text-gray-300">↕</span>}</div>
-                                                            </th>
-                                                            <th className="p-3 border-b border-gray-200 w-1/2 cursor-pointer hover:bg-gray-200 transition" onClick={() => requestSort('text')}>
-                                                                <div className="flex items-center gap-1">{t.qTopic} {sortConfig.key === 'text' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : <span className="text-gray-300">↕</span>}</div>
-                                                            </th>
-                                                            <th className="p-3 border-b border-gray-200 text-center cursor-pointer hover:bg-gray-200 transition" onClick={() => requestSort('prePercent')}>
-                                                                <div className="flex items-center justify-center gap-1">Pre-test (%) {sortConfig.key === 'prePercent' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : <span className="text-gray-300">↕</span>}</div>
-                                                            </th>
-                                                            <th className="p-3 border-b border-gray-200 text-center cursor-pointer hover:bg-gray-200 transition" onClick={() => requestSort('postPercent')}>
-                                                                <div className="flex items-center justify-center gap-1">Post-test (%) {sortConfig.key === 'postPercent' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : <span className="text-gray-300">↕</span>}</div>
-                                                            </th>
-                                                            <th className="p-3 border-b border-gray-200 text-right cursor-pointer hover:bg-gray-200 transition" onClick={() => requestSort('improvement')}>
-                                                                <div className="flex items-center justify-end gap-1">{t.improvement} {sortConfig.key === 'improvement' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : <span className="text-gray-300">↕</span>}</div>
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {sortedQuestionStats.map((q, idx) => (
-                                                            <tr key={q.key} className="border-b border-gray-100 hover:bg-blue-50 transition">
-                                                                <td className="p-3 text-sm text-gray-500">{q.key.toUpperCase()}</td>
-                                                                <td className="p-3 text-sm text-gray-800 truncate max-w-xs" title={q.text}>{q.text}</td>
-                                                                <td className="p-3 text-sm text-center">
-                                                                    <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1"><div className="bg-yellow-400 h-1.5 rounded-full" style={{width: `${q.prePercent}%`}}></div></div>
-                                                                    {q.prePercent}%
-                                                                </td>
-                                                                <td className="p-3 text-sm text-center font-medium">
-                                                                    <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1"><div className="bg-green-500 h-1.5 rounded-full" style={{width: `${q.postPercent}%`}}></div></div>
-                                                                    {q.postPercent}%
-                                                                </td>
-                                                                <td className={`p-3 text-sm text-right font-semibold ${q.improvement > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                                                    {q.improvement > 0 ? '+' : ''}{q.improvement}%
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        ) : (
-                                            <div className="h-96 w-full p-4 flex-1">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <BarChart
-                                                        data={sortedQuestionStats}
-                                                        margin={{ top: 20, right: 10, left: -20, bottom: 5 }}
-                                                    >
-                                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                                                        <XAxis dataKey="key" tickFormatter={(v) => String(v).toUpperCase()} tick={{fontSize: 12}} />
-                                                        <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{fontSize: 12}} />
-                                                        <Tooltip content={<QuestionTooltip />} cursor={{fill: '#f3f4f6'}} />
-                                                        <Legend />
-                                                        <Bar dataKey="prePercent" name={t.preTestName} fill="#fbbf24" radius={[4, 4, 0, 0]} />
-                                                        <Bar dataKey="postPercent" name={t.postTestName} fill="#22c55e" radius={[4, 4, 0, 0]} />
-                                                    </BarChart>
-                                                </ResponsiveContainer>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* AI Recommendations Panel */}
-                                    <div className="bg-white rounded-xl shadow-sm flex flex-col border border-purple-100">
-                                        <div className="p-4 border-b border-purple-100 bg-purple-50 flex items-center gap-2 rounded-t-xl">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                                            <h3 className="font-semibold text-purple-900">{t.aiTitle}</h3>
-                                        </div>
-                                        <div className="p-4 flex-1 flex flex-col">
-                                            <p className="text-sm text-gray-600 mb-3">
-                                                {t.aiDesc} (Bottom {bottomQuestions.length}):
-                                            </p>
-                                            <ul className="space-y-2 mb-4 flex-1">
-                                                {bottomQuestions.map((q, i) => (
-                                                    <li key={i} className="text-xs p-2 bg-red-50 text-red-800 border border-red-100 rounded flex gap-2 items-start">
-                                                        <span className="font-bold">{i+1}.</span>
-                                                        <span className="line-clamp-2" title={q.text}>{q.text}</span>
-                                                        <span className="ml-auto font-bold">{q.postPercent}%</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-
-                                            {!aiRecommendation && !isAiLoading && (
-                                                <div className="mb-4 mt-2">
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">{t.customPromptLabel}</label>
-                                                    <textarea 
-                                                        className="w-full text-sm border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                                                        rows="2"
-                                                        placeholder={t.customPromptPlaceholder}
-                                                        value={customInstruction}
-                                                        onChange={(e) => setCustomInstruction(e.target.value)}
-                                                    ></textarea>
-                                                </div>
-                                            )}
-
-                                            {!aiRecommendation && !isAiLoading && (
-                                                <button 
-                                                    onClick={getAIRecommendation}
-                                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium py-2 rounded shadow transition flex justify-center items-center gap-2"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
-                                                    {t.generateAiBtn}
-                                                </button>
-                                            )}
-
-                                            {isAiLoading && (
-                                                <div className="text-center py-4 text-purple-600 text-sm flex flex-col items-center gap-2">
-                                                    <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                                    {t.aiLoading}
-                                                </div>
-                                            )}
-
-                                            {aiError && <div className="text-red-500 text-xs mt-2 text-center">{aiError}</div>}
-
-                                            {aiRecommendation && (
-                                                <div className="mt-2 bg-purple-50 p-3 rounded border border-purple-100 h-48 overflow-y-auto custom-scrollbar text-sm text-gray-800 leading-relaxed">
-                                                    {/* Simple markdown parsing for bold text */}
-                                                    {aiRecommendation.split('\n').map((line, i) => {
-                                                        const parts = line.split(/(\*\*.*?\*\*)/g);
-                                                        return (
-                                                            <p key={i} className="mb-2">
-                                                                {parts.map((part, j) => 
-                                                                    part.startsWith('**') && part.endsWith('**') 
-                                                                        ? <strong key={j}>{part.slice(2, -2)}</strong> 
-                                                                        : part
-                                                                )}
-                                                            </p>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* ພາກທີ 3: ປຽບທຽບຕາມ Organization Type */}
-                                <div className="bg-white rounded-xl shadow-sm p-4">
-                                    <h3 className="font-semibold text-gray-800 mb-4 ml-2">{t.orgChartTitle}</h3>
-                                    <div className="h-80 w-full">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart
-                                                data={orgStats}
-                                                margin={{ top: 30, right: 30, left: 0, bottom: 5 }}
-                                            >
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                                                <XAxis dataKey="name" tick={{fontSize: 12}} />
-                                                <YAxis domain={[0, maxScore + 1]} />
-                                                <Tooltip 
-                                                    contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                                                />
-                                                <Legend />
-                                                <Bar dataKey="Pre_test" name={t.preTestName} fill="#fbbf24" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#4b5563', fontSize: 12, fontWeight: 600 }} />
-                                                <Bar dataKey="Post_test" name={t.postTestName} fill="#22c55e" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#4b5563', fontSize: 12, fontWeight: 600 }} />
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+    <div class="flex-1 overflow-hidden relative bg-white">
+        <!-- PROJECT TAB -->
+        <div id="tab-project" class="tab-content hidden w-full h-full p-6 overflow-y-auto">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2" data-i18n="lbl-proj-info">Project Information</h2>
+            <div class="bg-gray-50 p-4 rounded-lg border shadow-sm max-w-3xl">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="lbl-proj-title">Project Title</label>
+                        <input id="proj-title-en" type="text" class="en-text mb-2 w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500" value="Women Empowerment Initiative">
+                        <input id="proj-title-lo" type="text" class="lao-text w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500" value="ໂຄງການສົ່ງເສີມຄວາມເຂັ້ມແຂງແມ່ຍິງ">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="lbl-proj-code">Project Code</label>
+                        <input id="proj-code" type="text" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500" value="WEI-2026-01">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="lbl-proj-desc">Description</label>
+                        <textarea id="proj-desc-en" class="en-text mb-2 w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500" rows="3">A comprehensive program aimed at achieving gender equality and empowering women and girls across all spheres of life.</textarea>
+                        <textarea id="proj-desc-lo" class="lao-text w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500" rows="3">ໂຄງການຮອບດ້ານທີ່ແນໃສ່ການບັນລຸຄວາມສະເໝີພາບຍິງ-ຊາຍ ແລະ ສົ່ງເສີມຄວາມເຂັ້ມແຂງໃຫ້ແກ່ແມ່ຍິງ ແລະ ເດັກຍິງໃນທຸກຂົງເຂດ</textarea>
                     </div>
                 </div>
-            );
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="tab-settings" class="tab-content hidden w-full h-full p-6 overflow-y-auto">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2" data-i18n="tab-settings">Settings</h2>
+            
+            <div class="bg-gray-50 p-6 rounded-lg border shadow-sm max-w-4xl">
+                <h3 class="text-lg font-bold text-gray-700 mb-2 border-b pb-2" data-i18n="lbl-custom-headers">Customize Logframe Headers</h3>
+                <p class="text-sm text-gray-600 mb-6" data-i18n="desc-custom-headers">Change the default terms for the logical framework levels to match your project's specific terminology.</p>
+                
+                <div class="grid grid-cols-12 gap-4 font-bold text-gray-700 mb-2 px-2 text-sm uppercase tracking-wider">
+                    <div class="col-span-4" data-i18n="lbl-level">Level</div>
+                    <div class="col-span-4" data-i18n="lbl-en">English (EN)</div>
+                    <div class="col-span-4" data-i18n="lbl-lo">Lao (LA)</div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="grid grid-cols-12 gap-4 items-center bg-white p-3 border rounded shadow-sm">
+                        <div class="col-span-4 font-semibold text-gray-800 px-2" data-i18n="lbl-lvl1">Level 1 (Highest)</div>
+                        <div class="col-span-4"><input type="text" id="set-goal-en" class="border rounded p-2 w-full text-sm outline-none focus:border-blue-500" value="Goals" oninput="updateCustomHeader('en', 'th-goals', this.value)"></div>
+                        <div class="col-span-4"><input type="text" id="set-goal-lo" class="border rounded p-2 w-full text-sm outline-none focus:border-blue-500" value="ເປົ້າໝາຍ (Goals)" oninput="updateCustomHeader('lo', 'th-goals', this.value)"></div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-4 items-center bg-white p-3 border rounded shadow-sm">
+                        <div class="col-span-4 font-semibold text-gray-800 px-2" data-i18n="lbl-lvl2">Level 2</div>
+                        <div class="col-span-4"><input type="text" id="set-purp-en" class="border rounded p-2 w-full text-sm outline-none focus:border-blue-500" value="Purposes" oninput="updateCustomHeader('en', 'th-purposes', this.value)"></div>
+                        <div class="col-span-4"><input type="text" id="set-purp-lo" class="border rounded p-2 w-full text-sm outline-none focus:border-blue-500" value="ຈຸດປະສົງ (Purposes)" oninput="updateCustomHeader('lo', 'th-purposes', this.value)"></div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-4 items-center bg-white p-3 border rounded shadow-sm">
+                        <div class="col-span-4 font-semibold text-gray-800 px-2" data-i18n="lbl-lvl3">Level 3</div>
+                        <div class="col-span-4"><input type="text" id="set-out-en" class="border rounded p-2 w-full text-sm outline-none focus:border-blue-500" value="Outputs" oninput="updateCustomHeader('en', 'th-outputs', this.value)"></div>
+                        <div class="col-span-4"><input type="text" id="set-out-lo" class="border rounded p-2 w-full text-sm outline-none focus:border-blue-500" value="ຜົນໄດ້ຮັບ (Outputs)" oninput="updateCustomHeader('lo', 'th-outputs', this.value)"></div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-4 items-center bg-white p-3 border rounded shadow-sm">
+                        <div class="col-span-4 font-semibold text-gray-800 px-2" data-i18n="lbl-lvl4">Level 4 (Actions)</div>
+                        <div class="col-span-4"><input type="text" id="set-act-en" class="border rounded p-2 w-full text-sm outline-none focus:border-blue-500" value="Activities" oninput="updateCustomHeader('en', 'th-activities', this.value)"></div>
+                        <div class="col-span-4"><input type="text" id="set-act-lo" class="border rounded p-2 w-full text-sm outline-none focus:border-blue-500" value="ກິດຈະກຳ (Activities)" oninput="updateCustomHeader('lo', 'th-activities', this.value)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOGFRAME TAB -->
+        <div id="tab-logframe" class="tab-content w-full h-full overflow-hidden flex flex-col">
+            <div class="table-container flex-1 overflow-auto bg-gray-200 p-2">
+                <table class="logframe-table w-full border-collapse min-w-[1000px] text-sm">
+                    <colgroup>
+                        <col style="width: 30%;">
+                        <col style="width: 35%;">
+                        <col style="width: 20%;">
+                        <col style="width: 15%;">
+                    </colgroup>
+                    
+                    <tbody>
+                        <tr>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-goals">Goals</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-indicators">Indicators</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-verification">Verification sources</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-assumptions">Assumptions</th>
+                        </tr>
+                        <tr class="sync-row">
+                            <td class="editable-cell" contenteditable="true">
+                                <div class="en-text"><span class="font-bold text-blue-600 mr-1">Goal:</span> Achieve gender equality and empower all women and girls</div>
+                                <div class="lao-text"><span class="font-bold text-blue-600 mr-1">ເປົ້າໝາຍ:</span> ບັນລຸຄວາມສະເໝີພາບຍິງ-ຊາຍ ແລະ ສົ່ງເສີມຄວາມເຂັ້ມແຂງໃຫ້ແມ່ຍິງ ແລະ ເດັກຍິງທຸກຄົນ</div>
+                            </td>
+                            <td class="bg-gray-100 relative group align-top has-list p-0">
+                                <div class="list-container"><div class="list-item" contenteditable="true"><div class="en-text"></div><div class="lao-text"></div></div></div>
+                                <button onclick="addItem(this, true)" class="add-btn absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity" contenteditable="false"><i class="fas fa-plus"></i> <span data-i18n="btn-add">Add</span></button>
+                            </td>
+                            <td class="bg-gray-100 relative group align-top has-list p-0">
+                                <div class="list-container"><div class="list-item" contenteditable="true"><div class="en-text"></div><div class="lao-text"></div></div></div>
+                                <button onclick="addItem(this, false)" class="add-btn absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity" contenteditable="false"><i class="fas fa-plus"></i> <span data-i18n="btn-add">Add</span></button>
+                            </td>
+                            <td class="bg-gray-100 relative group align-top has-list p-0">
+                                <div class="list-container"><div class="list-item" contenteditable="true"><div class="en-text"></div><div class="lao-text"></div></div></div>
+                                <button onclick="addItem(this, false)" class="add-btn absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity" contenteditable="false"><i class="fas fa-plus"></i> <span data-i18n="btn-add">Add</span></button>
+                            </td>
+                        </tr>
+                        <tr><td colspan="4" class="h-4 !p-0 !border-0 !bg-gray-200"></td></tr>
+                    </tbody>
+
+                    <tbody>
+                        <tr>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-purposes">Purposes</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-indicators">Indicators</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-verification">Verification sources</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-assumptions">Assumptions</th>
+                        </tr>
+                        <tr class="purpose-row sync-row" data-prefix="1">
+                            <td class="editable-cell" contenteditable="true">
+                                <div class="en-text"><span class="font-bold text-blue-600 mr-1">1.</span> End all forms of discrimination against all women and girls</div>
+                                <div class="lao-text"><span class="font-bold text-blue-600 mr-1">1.</span> ຍຸຕິທຸກຮູບແບບການຈຳແນກຕໍ່ແມ່ຍິງ ແລະ ເດັກຍິງທຸກຄົນ</div>
+                            </td>
+                            <td class="bg-white relative group align-top has-list p-0">
+                                <div class="list-container">
+                                    <div class="list-item" contenteditable="true">
+                                        <div class="en-text"><span class="font-bold mr-1 text-blue-600 ind-prefix" contenteditable="false">1.1</span> Legal frameworks in place to promote equality</div>
+                                        <div class="lao-text"><span class="font-bold mr-1 text-blue-600 ind-prefix" contenteditable="false">1.1</span> ມີກອບກົດໝາຍເພື່ອສົ່ງເສີມຄວາມສະເໝີພາບ</div>
+                                    </div>
+                                </div>
+                                <button onclick="addItem(this, true)" class="add-btn absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity" contenteditable="false"><i class="fas fa-plus"></i> <span data-i18n="btn-add">Add</span></button>
+                            </td>
+                            <td class="bg-white relative group align-top has-list p-0">
+                                <div class="list-container"><div class="list-item" contenteditable="true"><div class="en-text"></div><div class="lao-text"></div></div></div>
+                                <button onclick="addItem(this, false)" class="add-btn absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity" contenteditable="false"><i class="fas fa-plus"></i> <span data-i18n="btn-add">Add</span></button>
+                            </td>
+                            <td class="bg-white relative group align-top has-list p-0">
+                                <div class="list-container"><div class="list-item" contenteditable="true"><div class="en-text"></div><div class="lao-text"></div></div></div>
+                                <button onclick="addItem(this, false)" class="add-btn absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity" contenteditable="false"><i class="fas fa-plus"></i> <span data-i18n="btn-add">Add</span></button>
+                            </td>
+                        </tr>
+                        <tr><td colspan="4" class="h-4 !p-0 !border-0 !bg-gray-200"></td></tr>
+                    </tbody>
+
+                    <tbody>
+                        <tr>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-outputs">Outputs</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-indicators">Indicators</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-verification">Verification sources</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-assumptions">Assumptions</th>
+                        </tr>
+                        <tr class="blue-ribbon">
+                            <td colspan="4" class="!text-left editable-cell" contenteditable="true">
+                                <div class="en-text">End all forms of discrimination against all women and girls everywhere</div>
+                                <div class="lao-text">ຍຸຕິທຸກຮູບແບບການຈຳແນກຕໍ່ແມ່ຍິງ ແລະ ເດັກຍິງໃນທຸກຫົນທຸກແຫ່ງ</div>
+                            </td>
+                        </tr>
+                        <tr class="output-row sync-row" data-prefix="1.1">
+                            <td class="!bg-white editable-cell" contenteditable="true">
+                                <div class="en-text"><span class="font-bold text-blue-600 mr-1">Output 1.1:</span> Legal reviews conducted.</div>
+                                <div class="lao-text"><span class="font-bold text-blue-600 mr-1">ຜົນໄດ້ຮັບ 1.1:</span> ການທົບທວນກົດໝາຍສຳເລັດແລ້ວ.</div>
+                            </td>
+                            <td class="!bg-white relative group align-top has-list p-0">
+                                <div class="list-container">
+                                    <div class="list-item" contenteditable="true">
+                                        <div class="en-text"><span class="font-bold mr-1 text-blue-600 ind-prefix" contenteditable="false">1.1.1</span> Number of reviews completed.</div>
+                                        <div class="lao-text"><span class="font-bold mr-1 text-blue-600 ind-prefix" contenteditable="false">1.1.1</span> ຈຳນວນການທົບທວນທີ່ສຳເລັດ.</div>
+                                    </div>
+                                </div>
+                                <button onclick="addItem(this, true)" class="add-btn absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity" contenteditable="false"><i class="fas fa-plus"></i> <span data-i18n="btn-add">Add</span></button>
+                            </td>
+                            <td class="!bg-white relative group align-top has-list p-0">
+                                <div class="list-container">
+                                    <div class="list-item" contenteditable="true">
+                                        <div class="en-text">Project Reports</div>
+                                        <div class="lao-text">ບົດລາຍງານໂຄງການ</div>
+                                    </div>
+                                </div>
+                                <button onclick="addItem(this, false)" class="add-btn absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity" contenteditable="false"><i class="fas fa-plus"></i> <span data-i18n="btn-add">Add</span></button>
+                            </td>
+                            <td class="!bg-white relative group align-top has-list p-0">
+                                <div class="list-container">
+                                    <div class="list-item" contenteditable="true">
+                                        <div class="en-text">Government willingness.</div>
+                                        <div class="lao-text">ຄວາມເຕັມໃຈຂອງລັດຖະບານ</div>
+                                    </div>
+                                </div>
+                                <button onclick="addItem(this, false)" class="add-btn absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity" contenteditable="false"><i class="fas fa-plus"></i> <span data-i18n="btn-add">Add</span></button>
+                            </td>
+                        </tr>
+                        <tr><td colspan="4" class="h-4 !p-0 !border-0 !bg-gray-200"></td></tr>
+                    </tbody>
+
+                    <tbody>
+                        <tr>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-activities">Activities</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-resources">Resources</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-budget">Budget</th>
+                            <th class="!bg-gray-400 !text-white font-bold text-lg" data-i18n="th-assumptions">Assumptions</th>
+                        </tr>
+                        <tr class="blue-ribbon">
+                            <td colspan="4" class="!text-left editable-cell" contenteditable="true">
+                                <div class="en-text">Output 1.1: Legal reviews conducted.</div>
+                                <div class="lao-text">ຜົນໄດ້ຮັບ 1.1: ການທົບທວນກົດໝາຍສຳເລັດແລ້ວ.</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="!bg-white editable-cell" contenteditable="true">
+                                <div class="en-text"><span class="font-bold text-blue-600 mr-1">Act 1.1.1:</span> Hire legal consultants</div>
+                                <div class="lao-text"><span class="font-bold text-blue-600 mr-1">ກິດຈະກຳ 1.1.1:</span> ຈ້າງທີ່ປຶກສາດ້ານກົດໝາຍ</div>
+                            </td>
+                            <td class="!bg-white editable-cell" contenteditable="true">
+                                <div class="en-text">Legal Consultants (4 Months)</div>
+                                <div class="lao-text">ທີ່ປຶກສາກົດໝາຍ (4 ເດືອນ)</div>
+                            </td>
+                            <td class="!bg-white editable-cell" contenteditable="true">10,000.00 USD</td>
+                            <td class="!bg-white editable-cell" contenteditable="true">Qualified consultants are available.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="bg-gray-100 border-t p-1 flex justify-between items-center text-xs text-gray-600 px-4 shrink-0">
+                <span data-i18n="lbl-ready">Ready</span>
+                <div class="flex gap-4"><span>100%</span> <i class="fas fa-search-plus cursor-pointer hover:text-gray-900"></i></div>
+            </div>
+        </div>
+
+        <!-- PLANNING TAB -->
+        <div id="tab-planning" class="tab-content hidden w-full h-full p-6 overflow-y-auto">
+            <div class="flex justify-between items-end mb-4 border-b pb-2">
+                <h2 class="text-2xl font-bold text-gray-800" data-i18n="tab-planning">Planning</h2>
+                <button onclick="syncPlanningFromLogframe()" class="bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded hover:bg-blue-100 transition-colors shadow-sm text-sm font-medium">
+                    <i class="fas fa-sync-alt mr-1"></i> <span data-i18n="btn-sync">Sync from Logframe</span>
+                </button>
+            </div>
+            <div class="bg-white border rounded-lg shadow-sm overflow-hidden">
+                <table class="min-w-full text-sm text-left planning-table">
+                    <thead class="bg-blue-50 border-b">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-1/3">Activity</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-32 text-center" data-i18n="th-responsible">Responsible</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-24 text-center">Start</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-24 text-center">End</th>
+                            <th class="px-2 py-3 font-semibold text-gray-700 text-center" colspan="4">Q1 2026</th>
+                        </tr>
+                        <tr class="bg-gray-50 border-b text-xs text-gray-500">
+                            <th class="border-r"></th><th class="border-r"></th><th class="border-r"></th><th class="border-r"></th>
+                            <th class="px-2 py-1 border-r text-center">Jan</th>
+                            <th class="px-2 py-1 border-r text-center">Feb</th>
+                            <th class="px-2 py-1 border-r text-center">Mar</th>
+                            <th class="px-2 py-1 text-center">Apr</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- BUDGET TAB -->
+        <div id="tab-budget" class="tab-content hidden w-full h-full p-6 overflow-y-auto">
+            <div class="flex justify-between items-end mb-4 border-b pb-2">
+                <h2 class="text-2xl font-bold text-gray-800" data-i18n="tab-budget">Budget</h2>
+                <button onclick="syncBudget()" class="bg-green-50 text-green-600 border border-green-200 px-3 py-1.5 rounded hover:bg-green-100 transition-colors shadow-sm text-sm font-medium">
+                    <i class="fas fa-sync-alt mr-1"></i> <span data-i18n="btn-sync">Sync from Logframe</span>
+                </button>
+            </div>
+            <div class="bg-white border rounded-lg shadow-sm overflow-hidden">
+                <table class="min-w-full text-sm text-left budget-table">
+                    <thead class="bg-green-50 border-b">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-1/3" data-i18n="th-activities">Activities</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-1/4" data-i18n="th-resources">Resources</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-24 text-right" data-i18n="th-unit">Unit</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-32 text-right">Unit Cost</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-24 text-right">Qty</th>
+                            <th class="px-4 py-3 font-semibold text-gray-900 w-32 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="budget-tbody" class="divide-y"></tbody>
+                    <tfoot class="bg-gray-200 font-bold border-t-2 border-gray-400">
+                        <tr>
+                            <td colspan="5" class="px-4 py-3 text-right border-r">Grand Total:</td>
+                            <td id="budget-grand-total" class="px-4 py-3 text-right text-green-700">0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- TRACKING TAB -->
+        <div id="tab-tracking" class="tab-content hidden w-full h-full p-6 overflow-y-auto">
+            <div class="flex justify-between items-end mb-4 border-b pb-2">
+                <h2 class="text-2xl font-bold text-gray-800" data-i18n="tab-tracking">Indicators Tracking</h2>
+                <div class="flex gap-2">
+                    <button onclick="addTrackingYear()" class="bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded hover:bg-blue-100 transition-colors shadow-sm text-sm font-medium">
+                        <i class="fas fa-plus mr-1"></i> <span data-i18n="btn-add-year">Add Year</span>
+                    </button>
+                    <button onclick="syncTracking()" class="bg-purple-50 text-purple-600 border border-purple-200 px-3 py-1.5 rounded hover:bg-purple-100 transition-colors shadow-sm text-sm font-medium">
+                        <i class="fas fa-sync-alt mr-1"></i> <span data-i18n="btn-sync">Sync from Logframe</span>
+                    </button>
+                </div>
+            </div>
+            <div class="bg-white border rounded-lg shadow-sm overflow-hidden overflow-x-auto">
+                <table class="min-w-full text-sm text-left tracking-table">
+                    <thead class="bg-purple-50 border-b">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-1/3 min-w-[250px]" data-i18n="th-hierarchy">Hierarchy / Indicator</th>
+                            <th class="px-2 py-3 font-semibold text-gray-700 border-r w-16 text-center" data-i18n="th-unit">Unit</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-24 text-center" data-i18n="th-baseline">Baseline</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-24 text-center th-target-overall bg-purple-100" data-i18n="th-target-overall">Overall Target</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-24 text-center th-actual-overall bg-purple-100" data-i18n="th-actual-overall">Overall Actual</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 border-r w-24 text-center" data-i18n="th-progress">Progress</th>
+                            <th class="px-4 py-3 font-semibold text-gray-700 w-48" data-i18n="th-status">Status / Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tracking-tbody" class="divide-y"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Export Options Modal -->
+    <div id="export-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-[400px]">
+            <h3 class="text-lg font-bold mb-2 text-gray-800" data-i18n="lbl-export-options">Export Options</h3>
+            <p class="text-sm text-gray-600 mb-6" data-i18n="desc-export-options">Select how you want to export the data:</p>
+            <div class="flex flex-col gap-3">
+                <button onclick="confirmExport('format')" class="w-full bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 py-3 px-4 rounded text-left flex items-center transition-colors">
+                    <i class="fas fa-paint-roller w-8 text-center text-xl mr-2"></i>
+                    <div>
+                        <div class="font-bold" data-i18n="btn-export-format">With Formatting</div>
+                        <div class="text-xs font-normal text-blue-600 mt-1" data-i18n="desc-export-format">Keep colors, bold text, and layout</div>
+                    </div>
+                </button>
+                <button onclick="confirmExport('raw')" class="w-full bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-700 py-3 px-4 rounded text-left flex items-center transition-colors">
+                    <i class="fas fa-table w-8 text-center text-xl mr-2 text-gray-500"></i>
+                    <div>
+                        <div class="font-bold" data-i18n="btn-export-raw">Raw Data Only</div>
+                        <div class="text-xs font-normal text-gray-500 mt-1" data-i18n="desc-export-raw">Plain text without colors</div>
+                    </div>
+                </button>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeExportModal()" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 font-medium transition-colors" data-i18n="btn-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase + App Script Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // -----------------------------------------------------------------
+        // Translations (Bilingual Support)
+        // -----------------------------------------------------------------
+        const dict = {
+            'en': {
+                'menu-project': 'Project',
+                'tab-project': 'Project', 'tab-logframe': 'Logframe', 'tab-tracking': 'Tracking', 'tab-planning': 'Planning', 'tab-budget': 'Budget', 'tab-settings': 'Settings',
+                'btn-save-html': 'Save HTML', 'btn-json': 'JSON', 'btn-import': 'Import', 'btn-excel': 'Excel', 'btn-word': 'Word',
+                'btn-add': 'Add', 'btn-sync': 'Sync from Logframe', 'btn-add-year': 'Add Year',
+                'btn-quick-save': 'Quick Save', 'btn-restore-cache': 'Restore',
+                'lbl-proj-info': 'Project Information', 'lbl-proj-title': 'Project Title', 'lbl-proj-code': 'Project Code', 'lbl-proj-desc': 'Description',
+                'lbl-custom-headers': 'Customize Logframe Headers', 'desc-custom-headers': 'Change the default terms for the logical framework levels to match your project\'s specific terminology.',
+                'lbl-level': 'Level', 'lbl-en': 'English (EN)', 'lbl-lo': 'Lao (LA)',
+                'lbl-lvl1': 'Level 1 (Highest)', 'lbl-lvl2': 'Level 2', 'lbl-lvl3': 'Level 3', 'lbl-lvl4': 'Level 4 (Actions)',
+                'th-goals': 'Goals', 'th-purposes': 'Purposes', 'th-outputs': 'Outputs', 'th-activities': 'Activities',
+                'th-indicators': 'Indicators', 'th-verification': 'Verification sources', 'th-assumptions': 'Assumptions',
+                'th-resources': 'Resources', 'th-budget': 'Budget', 'th-responsible': 'Responsible',
+                'th-hierarchy': 'Hierarchy / Indicator', 'th-baseline': 'Baseline', 'th-target': 'Target', 'th-actual': 'Actual Progress', 'th-progress': 'Progress (%)', 'th-status': 'Status / Notes',
+                'th-target-overall': 'Overall Target', 'th-actual-overall': 'Overall Actual',
+                'th-target-small': 'Target', 'th-actual-small': 'Actual',
+                'th-unit': 'Unit',
+                'lbl-export-options': 'Export Options',
+                'desc-export-options': 'Select how you want to export the data:',
+                'btn-export-format': 'With Formatting',
+                'desc-export-format': 'Keep colors, bold text, and layout (.xls / .doc)',
+                'btn-export-raw': 'Raw Data Only',
+                'desc-export-raw': 'Plain text without colors (.xlsx / .doc)',
+                'btn-cancel': 'Cancel',
+                'lbl-ready': 'Ready'
+            },
+            'lo': {
+                'menu-project': 'ໂຄງການ',
+                'tab-project': 'ໂຄງການ', 'tab-logframe': 'Logframe', 'tab-tracking': 'ຕິດຕາມຕົວຊີ້ວັດ', 'tab-planning': 'ແຜນວຽກ', 'tab-budget': 'ງົບປະມານ', 'tab-settings': 'ຕັ້ງຄ່າ',
+                'btn-save-html': 'ບັນທຶກ HTML', 'btn-json': 'JSON', 'btn-import': 'ນຳເຂົ້າ', 'btn-excel': 'Excel', 'btn-word': 'Word',
+                'btn-add': 'ເພີ່ມ', 'btn-sync': 'ດຶງຂໍ້ມູນຈາກ Logframe', 'btn-add-year': 'ເພີ່ມປີ',
+                'lbl-proj-info': 'ຂໍ້ມູນໂຄງການ', 'lbl-proj-title': 'ຊື່ໂຄງການ', 'lbl-proj-code': 'ລະຫັດໂຄງການ', 'lbl-proj-desc': 'ລາຍລະອຽດ',
+                'lbl-custom-headers': 'ຕັ້ງຄ່າຊື່ຫົວຂໍ້ຫຼັກ', 'desc-custom-headers': 'ປັບປ່ຽນຄຳສັບມາດຕະຖານຂອງໂຄງສ້າງ Logframe ໃຫ້ກົງກັບໂຄງການຂອງທ່ານ (ຕົວຢ່າງ: ປ່ຽນ ຈຸດປະສົງ ເປັນ ຜົນໄດ້ຮັບຫຼັກ).',
+                'lbl-level': 'ລະດັບຊັ້ນ', 'lbl-en': 'ພາສາອັງກິດ (EN)', 'lbl-lo': 'ພາສາລາວ (LA)',
+                'lbl-lvl1': 'ລະດັບ 1 (ສູງສຸດ)', 'lbl-lvl2': 'ລະດັບ 2', 'lbl-lvl3': 'ລະດັບ 3', 'lbl-lvl4': 'ລະດັບ 4 (ກິດຈະກຳ)',
+                'th-goals': 'ເປົ້າໝາຍ (Goals)', 'th-purposes': 'ຈຸດປະສົງ (Purposes)', 'th-outputs': 'ຜົນໄດ້ຮັບ (Outputs)', 'th-activities': 'ກິດຈະກຳ (Activities)',
+                'th-indicators': 'ຕົວຊີ້ວັດ (Indicators)', 'th-verification': 'ແຫຼ່ງຢັ້ງຢືນ (Verification)', 'th-assumptions': 'ຂໍ້ສົມມຸດຕິຖານ (Assumptions)',
+                'th-resources': 'ຊັບພະຍາກອນ (Resources)', 'th-budget': 'ງົບປະມານ (Budget)', 'th-responsible': 'ຜູ້ຮັບຜິດຊອບ',
+                'th-hierarchy': 'ໂຄງສ້າງ / ຕົວຊີ້ວັດ', 'th-baseline': 'ຄ່າພື້ນຖານ', 'th-target': 'ເປົ້າໝາຍ', 'th-actual': 'ຜົນຕົວຈິງ', 'th-progress': 'ຄວາມຄືບໜ້າ', 'th-status': 'ສະຖານະ/ໝາຍເຫດ',
+                'th-target-overall': 'ເປົ້າໝາຍລວມ', 'th-actual-overall': 'ຜົນລວມຕົວຈິງ',
+                'th-target-small': 'ເປົ້າໝາຍ', 'th-actual-small': 'ຜົນຕົວຈິງ',
+                'th-unit': 'ຫົວໜ່ວຍ',
+                'lbl-export-options': 'ຕົວເລືອກການສົ່ງອອກ',
+                'desc-export-options': 'ກະລຸນາເລືອກຮູບແບບທີ່ທ່ານຕ້ອງການສົ່ງອອກ:',
+                'btn-export-format': 'ສົ່ງອອກພ້ອມຮູບແບບ',
+                'desc-export-format': 'ຮັກສາສີ, ຕົວໜັງສືເຂັ້ມ ແລະ ການຈັດໜ້າ (.xls / .doc)',
+                'btn-export-raw': 'ສົ່ງອອກສະເພາະຂໍ້ມູນ (Raw)',
+                'desc-export-raw': 'ຕາຕະລາງທຳມະດາ ບໍ່ມີສີສັນ (.xlsx / .doc)',
+                'btn-cancel': 'ຍົກເລີກ',
+                'lbl-ready': 'ພ້ອມໃຊ້ງານ'
+            }
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('react-dashboard-root'));
-        root.render(<App />);
+        let currentLang = 'lo';
+        let trackingYearCount = 0;
+
+        // -----------------------------------------------------------------
+        // Firebase Cloud Cache Setup
+        // -----------------------------------------------------------------
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'logframe-app-id';
+
+        async function initFirebase() {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                try {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    // Auth logic (RULE 3)
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+
+                    onAuthStateChanged(auth, (user) => {
+                        currentUser = user;
+                        if (user) {
+                            console.log("Firebase Auth Success:", user.uid);
+                            // Automatically load state from cloud cache (Rule 3 Guarded inside)
+                            loadFromCache(false);
+                        }
+                    });
+                } catch (e) {
+                    console.error("Firebase connection failed:", e);
+                }
+            }
+        }
+
+        // Exponential backoff helper
+        async function withRetry(fn) {
+            let delay = 1000;
+            for (let i = 0; i < 5; i++) {
+                try {
+                    return await fn();
+                } catch (err) {
+                    if (i === 4) throw err;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        function showToast(message, type = "success") {
+            const toast = document.createElement("div");
+            toast.className = `fixed bottom-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white font-medium flex items-center gap-2 transition-all transform translate-y-10 opacity-0 duration-300 ${
+                type === "success" ? "bg-green-600" : type === "error" ? "bg-red-600" : "bg-blue-600"
+            }`;
+            toast.innerHTML = `
+                <i class="fas ${type === "success" ? "fa-check-circle" : type === "error" ? "fa-exclamation-circle" : "fa-info-circle"}"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.remove("translate-y-10", "opacity-0"), 10);
+            setTimeout(() => {
+                toast.classList.add("translate-y-10", "opacity-0");
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        async function saveToCache() {
+            if (!db || !currentUser) {
+                showToast("ລະບົບ Cloud ຍັງບໍ່ພ້ອມໃຊ້ງານ (ກຳລັງເຊື່ອມຕໍ່...)", "error");
+                return;
+            }
+            try {
+                // Rule 1 Compliant Path
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'cache', 'latest');
+                
+                const customHeaders = {
+                    en: {
+                        'th-goals': document.getElementById('set-goal-en')?.value || dict['en']['th-goals'],
+                        'th-purposes': document.getElementById('set-purp-en')?.value || dict['en']['th-purposes'],
+                        'th-outputs': document.getElementById('set-out-en')?.value || dict['en']['th-outputs'],
+                        'th-activities': document.getElementById('set-act-en')?.value || dict['en']['th-activities']
+                    },
+                    lo: {
+                        'th-goals': document.getElementById('set-goal-lo')?.value || dict['lo']['th-goals'],
+                        'th-purposes': document.getElementById('set-purp-lo')?.value || dict['lo']['th-purposes'],
+                        'th-outputs': document.getElementById('set-out-lo')?.value || dict['lo']['th-outputs'],
+                        'th-activities': document.getElementById('set-act-lo')?.value || dict['lo']['th-activities']
+                    }
+                };
+
+                await withRetry(() => setDoc(docRef, {
+                    projectTitleEn: document.getElementById('proj-title-en')?.value || '',
+                    projectTitleLo: document.getElementById('proj-title-lo')?.value || '',
+                    projectCode: document.getElementById('proj-code')?.value || '', 
+                    projectDescEn: document.getElementById('proj-desc-en')?.value || '',
+                    projectDescLo: document.getElementById('proj-desc-lo')?.value || '',
+                    logframeHTML: document.querySelector('.logframe-table').innerHTML,
+                    trackingHTML: document.querySelector('.tracking-table') ? document.querySelector('.tracking-table').innerHTML : '',
+                    trackingYearCount: trackingYearCount,
+                    customHeaders: customHeaders,
+                    updatedAt: new Date().toISOString()
+                }));
+
+                showToast("ບັນທຶກດ່ວນລົງແຄສ Cloud ສຳເລັດແລ້ວ!", "success");
+            } catch (err) {
+                console.error(err);
+                showToast("ການບັນທຶກຜິດພາດ ກະລຸນາລອງໃໝ່", "error");
+            }
+        }
+
+        async function loadFromCache(manualTrigger = false) {
+            if (!db || !currentUser) {
+                if (manualTrigger) showToast("ກຳລັງເຊື່ອມຕໍ່ກັບເຊີເວີ Cloud...", "error");
+                return;
+            }
+            try {
+                // Rule 1 Compliant Path
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'cache', 'latest');
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.projectTitleEn !== undefined) document.getElementById('proj-title-en').value = data.projectTitleEn;
+                    if (data.projectTitleLo !== undefined) document.getElementById('proj-title-lo').value = data.projectTitleLo;
+                    if (data.projectDescEn !== undefined) document.getElementById('proj-desc-en').value = data.projectDescEn;
+                    if (data.projectDescLo !== undefined) document.getElementById('proj-desc-lo').value = data.projectDescLo;
+                    if (data.projectCode !== undefined) document.getElementById('proj-code').value = data.projectCode;
+
+                    if (data.logframeHTML) {
+                        document.querySelector('.logframe-table').innerHTML = data.logframeHTML;
+                        setTimeout(syncAllHeights, 100);
+                    }
+                    if (data.trackingHTML && document.querySelector('.tracking-table')) {
+                        document.querySelector('.tracking-table').innerHTML = data.trackingHTML;
+                    }
+                    if (data.trackingYearCount !== undefined) trackingYearCount = data.trackingYearCount;
+                    
+                    if (data.customHeaders) {
+                        document.getElementById('set-goal-en').value = data.customHeaders.en['th-goals'];
+                        document.getElementById('set-purp-en').value = data.customHeaders.en['th-purposes'];
+                        document.getElementById('set-out-en').value = data.customHeaders.en['th-outputs'];
+                        document.getElementById('set-act-en').value = data.customHeaders.en['th-activities'];
+                        
+                        document.getElementById('set-goal-lo').value = data.customHeaders.lo['th-goals'];
+                        document.getElementById('set-purp-lo').value = data.customHeaders.lo['th-purposes'];
+                        document.getElementById('set-out-lo').value = data.customHeaders.lo['th-outputs'];
+                        document.getElementById('set-act-lo').value = data.customHeaders.lo['th-activities'];
+                        
+                        Object.keys(data.customHeaders.en).forEach(k => dict['en'][k] = data.customHeaders.en[k]);
+                        Object.keys(data.customHeaders.lo).forEach(k => dict['lo'][k] = data.customHeaders.lo[k]);
+                    }
+
+                    setLanguage(currentLang);
+                    showToast("ດຶງຂໍ້ມູນຫຼ້າສຸດຈາກແຄສ Cloud ສຳເລັດ!", "success");
+                } else {
+                    if (manualTrigger) {
+                        showToast("ບໍ່ພົບຂໍ້ມູນບັນທຶກໃນແຄສ", "error");
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                if (manualTrigger) showToast("ດຶງຂໍ້ມູນຜິດພາດ ກະລຸນາລອງໃໝ່", "error");
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // Core Logic
+        // -----------------------------------------------------------------
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.body.className = `h-screen flex flex-col overflow-hidden lang-${lang}`;
+            
+            document.getElementById('lang-en').className = lang === 'en' ? 'px-3 py-1 bg-blue-100 text-blue-800 transition-colors' : 'px-3 py-1 hover:bg-gray-100 text-gray-500 transition-colors';
+            document.getElementById('lang-lo').className = lang === 'lo' ? 'px-3 py-1 bg-blue-100 text-blue-800 transition-colors' : 'px-3 py-1 hover:bg-gray-100 text-gray-500 transition-colors';
+            document.getElementById('lang-bi').className = lang === 'bi' ? 'px-3 py-1 bg-blue-100 text-blue-800 transition-colors' : 'px-3 py-1 hover:bg-gray-100 text-gray-500 transition-colors';
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                let textToSet = '';
+                
+                if (lang === 'bi') {
+                    if (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') {
+                        const enStr = dict['en'][key] || '';
+                        const loStr = dict['lo'][key] || '';
+                        
+                        if(loStr.toLowerCase().includes(enStr.toLowerCase()) || enStr === '') textToSet = loStr;
+                        else if (enStr.length < 15 && loStr.length < 15) textToSet = `${enStr} / ${loStr}`;
+                        else textToSet = `${enStr}\n${loStr}`;
+                    }
+                } else {
+                    if (dict[lang][key]) textToSet = dict[lang][key];
+                }
+
+                if (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') {
+                    if(textToSet) el.innerText = textToSet;
+                }
+            });
+
+            document.querySelectorAll('th[data-y]').forEach(th => {
+                const y = th.dataset.y;
+                const isTarget = th.dataset.type === 'target';
+                let mainText = '';
+                if(lang === 'en') mainText = isTarget ? `Year ${y} Target` : `Year ${y} Actual`;
+                else if(lang === 'lo') mainText = isTarget ? `ເປົ້າໝາຍ ປີ ${y}` : `ຜົນຕົວຈິງ ປີ ${y}`;
+                else mainText = isTarget ? `Year ${y} Target\nເປົ້າໝາຍ ປີ ${y}` : `Year ${y} Actual\nຜົນຕົວຈິງ ປີ ${y}`;
+
+                const editableDiv = th.querySelector('.editable-cell');
+                if(editableDiv) editableDiv.innerText = mainText;
+            });
+        }
+
+        function updateCustomHeader(lang, key, value) {
+            if(value.trim() === '') return;
+            dict[lang][key] = value;
+            if (currentLang === lang || currentLang === 'bi') setLanguage(currentLang);
+        }
+
+        function isGoalRow(text) {
+            const t = text.toLowerCase();
+            const en = document.getElementById('set-goal-en').value.toLowerCase().split(/[ \(\)]/)[0];
+            const lo = document.getElementById('set-goal-lo').value.toLowerCase().split(/[ \(\)]/)[0];
+            return t.includes('goal') || t.includes('ເປົ້າໝາຍ') || (en && t.includes(en)) || (lo && t.includes(lo));
+        }
+        function isOutputRow(text) {
+            const t = text.toLowerCase();
+            const en = document.getElementById('set-out-en').value.toLowerCase().split(/[ \(\)]/)[0];
+            const lo = document.getElementById('set-out-lo').value.toLowerCase().split(/[ \(\)]/)[0];
+            return t.includes('output') || t.includes('ຜົນໄດ້ຮັບ') || (en && t.includes(en)) || (lo && t.includes(lo));
+        }
+        function isActivityRow(text) {
+            const t = text.toLowerCase();
+            const en = document.getElementById('set-act-en').value.toLowerCase().split(/[ \(\)]/)[0];
+            const lo = document.getElementById('set-act-lo').value.toLowerCase().split(/[ \(\)]/)[0];
+            return t.includes('act') || t.includes('ກິດຈະກຳ') || (en && t.includes(en)) || (lo && t.includes(lo));
+        }
+        function isPurposeRow(text) {
+            return text.match(/^[0-9]+\./) && !isOutputRow(text) && !isActivityRow(text);
+        }
+
+        // -----------------------------------------------------------------
+        // Export Functions
+        // -----------------------------------------------------------------
+        let pendingExportType = '';
+
+        function openExportModal(type) {
+            pendingExportType = type;
+            const modal = document.getElementById('export-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeExportModal() {
+            const modal = document.getElementById('export-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function confirmExport(mode) {
+            closeExportModal();
+            if (pendingExportType === 'excel') {
+                if (mode === 'format') exportExcelFormatted();
+                else exportExcelRaw();
+            } else if (pendingExportType === 'word') {
+                exportWord(mode);
+            }
+        }
+
+        function saveAsHTML() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'Logframe_Project.html'; a.click(); URL.revokeObjectURL(url);
+        }
+
+        function saveAsJSON() {
+            const customHeaders = {
+                en: {
+                    'th-goals': document.getElementById('set-goal-en').value,
+                    'th-purposes': document.getElementById('set-purp-en').value,
+                    'th-outputs': document.getElementById('set-out-en').value,
+                    'th-activities': document.getElementById('set-act-en').value
+                },
+                lo: {
+                    'th-goals': document.getElementById('set-goal-lo').value,
+                    'th-purposes': document.getElementById('set-purp-lo').value,
+                    'th-outputs': document.getElementById('set-out-lo').value,
+                    'th-activities': document.getElementById('set-act-lo').value
+                }
+            };
+
+            const data = { 
+                version: "1.5", 
+                projectTitleEn: document.getElementById('proj-title-en')?.value || '',
+                projectTitleLo: document.getElementById('proj-title-lo')?.value || '',
+                projectCode: document.getElementById('proj-code')?.value || '', 
+                projectDescEn: document.getElementById('proj-desc-en')?.value || '',
+                projectDescLo: document.getElementById('proj-desc-lo')?.value || '',
+                logframeHTML: document.querySelector('.logframe-table').innerHTML,
+                trackingHTML: document.querySelector('.tracking-table') ? document.querySelector('.tracking-table').innerHTML : '',
+                trackingYearCount: trackingYearCount,
+                customHeaders: customHeaders
+            };
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'Logframe_Data.json'; a.click(); URL.revokeObjectURL(url);
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.projectTitleEn !== undefined) document.getElementById('proj-title-en').value = data.projectTitleEn;
+                    if (data.projectTitleLo !== undefined) document.getElementById('proj-title-lo').value = data.projectTitleLo;
+                    if (data.projectDescEn !== undefined) document.getElementById('proj-desc-en').value = data.projectDescEn;
+                    if (data.projectDescLo !== undefined) document.getElementById('proj-desc-lo').value = data.projectDescLo;
+                    if (data.projectCode !== undefined) document.getElementById('proj-code').value = data.projectCode;
+
+                    if (data.logframeHTML) {
+                        document.querySelector('.logframe-table').innerHTML = data.logframeHTML;
+                        setTimeout(syncAllHeights, 100);
+                    }
+                    if (data.trackingHTML && document.querySelector('.tracking-table')) {
+                        document.querySelector('.tracking-table').innerHTML = data.trackingHTML;
+                    }
+                    if (data.trackingYearCount !== undefined) trackingYearCount = data.trackingYearCount;
+                    
+                    if (data.customHeaders) {
+                        document.getElementById('set-goal-en').value = data.customHeaders.en['th-goals'];
+                        document.getElementById('set-purp-en').value = data.customHeaders.en['th-purposes'];
+                        document.getElementById('set-out-en').value = data.customHeaders.en['th-outputs'];
+                        document.getElementById('set-act-en').value = data.customHeaders.en['th-activities'];
+                        
+                        document.getElementById('set-goal-lo').value = data.customHeaders.lo['th-goals'];
+                        document.getElementById('set-purp-lo').value = data.customHeaders.lo['th-purposes'];
+                        document.getElementById('set-out-lo').value = data.customHeaders.lo['th-outputs'];
+                        document.getElementById('set-act-lo').value = data.customHeaders.lo['th-activities'];
+                        
+                        Object.keys(data.customHeaders.en).forEach(k => dict['en'][k] = data.customHeaders.en[k]);
+                        Object.keys(data.customHeaders.lo).forEach(k => dict['lo'][k] = data.customHeaders.lo[k]);
+                    }
+
+                    setLanguage(currentLang);
+                    showToast("ນຳເຂົ້າຂໍ້ມູນ JSON ສຳເລັດແລ້ວ!", "success");
+                } catch (err) {
+                    showToast("ເກີດຂໍ້ຜິດພາດໃນການອ່ານໄຟລ໌ JSON", "error");
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function getCleanedTableHTML(isRaw = false) {
+            const activeTab = document.querySelector('.tab-content:not(.hidden)');
+            const tableSource = activeTab ? activeTab.querySelector('table') : document.querySelector('.logframe-table');
+            if (!tableSource) return "<table><tr><td>No data</td></tr></table>";
+            
+            const tableClone = tableSource.cloneNode(true);
+            tableClone.querySelectorAll('.add-btn').forEach(btn => btn.remove());
+            
+            if (currentLang === 'en') {
+                tableClone.querySelectorAll('.lao-text').forEach(el => el.remove());
+            } else if (currentLang === 'lo') {
+                tableClone.querySelectorAll('.en-text').forEach(el => el.remove());
+            }
+
+            tableClone.querySelectorAll('.list-container').forEach(container => {
+                const items = Array.from(container.querySelectorAll('.list-item'));
+                const newCellContent = document.createElement('div');
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.innerHTML = item.innerHTML;
+                    div.style.marginBottom = '8px';
+                    newCellContent.appendChild(div);
+                });
+                container.parentNode.replaceChild(newCellContent, container);
+            });
+
+            if (isRaw) {
+                tableClone.removeAttribute('class');
+                tableClone.querySelectorAll('*').forEach(el => {
+                    el.removeAttribute('class');
+                    el.removeAttribute('style');
+                });
+            }
+
+            return tableClone.outerHTML;
+        }
+
+        function exportExcelRaw() {
+            if (typeof XLSX === 'undefined') return;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = getCleanedTableHTML(true);
+            const tableToExport = tempDiv.querySelector('table');
+            tableToExport.querySelectorAll('tr').forEach(tr => {
+                if(tr.querySelector('td') && tr.querySelector('td').colSpan >= 4 && tr.innerText.trim() === '') tr.remove();
+            });
+            const wb = XLSX.utils.table_to_book(tableToExport, {sheet: "ExportData"});
+            XLSX.writeFile(wb, 'Logframe_Export.xlsx');
+        }
+
+        function exportExcelFormatted() {
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:x='urn:schemas-microsoft-com:office:excel' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table { border-collapse: collapse; } th, td { border: 1px solid #9ca3af; padding: 5px; vertical-align: top; } th { background-color: #d1d5db; font-weight: bold; } tr.blue-ribbon td { background-color: #93c5fd; font-weight: bold; color: #1e3a8a; } .lao-text{ color: #4b5563; font-size: 0.95em; }</style></head><body>";
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = getCleanedTableHTML(false);
+            const tableToExport = tempDiv.querySelector('table');
+            tableToExport.querySelectorAll('tr').forEach(tr => {
+                if(tr.querySelector('td') && tr.querySelector('td').colSpan >= 4 && tr.innerText.trim() === '') tr.remove();
+            });
+            const sourceHTML = header + tableToExport.outerHTML + "</body></html>";
+            const blob = new Blob([sourceHTML], { type: 'application/vnd.ms-excel' });
+            const url = URL.createObjectURL(blob);
+            const fileDownload = document.createElement("a");
+            fileDownload.href = url;
+            fileDownload.download = 'Logframe_Export.xls';
+            fileDownload.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportWord(mode) {
+            let style = "";
+            if (mode === 'format') {
+                style = "<style>table { border-collapse: collapse; width: 100%; font-family: 'Noto Sans Lao', sans-serif; font-size: 11pt; } th, td { border: 1px solid #000000; padding: 5px; vertical-align: top; } th { background-color: #d1d5db; } tr.blue-ribbon td { background-color: #93c5fd; font-weight: bold; } .lao-text{ color: #4b5563; font-size: 0.95em;}</style>";
+            } else {
+                style = "<style>table { border-collapse: collapse; width: 100%; font-family: 'Noto Sans Lao', sans-serif; font-size: 11pt; } th, td { border: 1px solid #000000; padding: 5px; vertical-align: top; } .lao-text{ font-size: 0.95em; }</style>";
+            }
+
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export</title>" + style + "</head><body>";
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = getCleanedTableHTML(mode === 'raw');
+            const tableToExport = tempDiv.querySelector('table');
+            tableToExport.querySelectorAll('tr').forEach(tr => {
+                if(tr.querySelector('td') && tr.querySelector('td').colSpan >= 4 && tr.innerText.trim() === '') tr.remove();
+            });
+            const sourceHTML = header + tableToExport.outerHTML + "</body></html>";
+            
+            const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const fileDownload = document.createElement("a");
+            fileDownload.href = url;
+            fileDownload.download = 'Logframe_Export.doc';
+            fileDownload.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // -----------------------------------------------------------------
+        // Formatting & Tab Navigation
+        // -----------------------------------------------------------------
+        function execCmd(command, value = null) {
+            document.execCommand(command, false, value);
+            setTimeout(() => {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0) {
+                    let node = sel.anchorNode;
+                    if (node && node.nodeType === 3) node = node.parentNode;
+                    const tr = node ? node.closest('tr.sync-row') : null;
+                    if (tr) syncRowHeights(tr);
+                }
+            }, 50);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-100', 'border-blue-300');
+                btn.classList.add('border-transparent');
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            activeBtn.classList.remove('border-transparent');
+            activeBtn.classList.add('bg-blue-100', 'border-blue-300');
+
+            if (tabId === 'planning') syncPlanningFromLogframe();
+            if (tabId === 'budget') syncBudget();
+            if (tabId === 'tracking') syncTracking();
+        }
+
+        function syncRowHeights(tr) {
+            const lists = tr.querySelectorAll('.list-container');
+            if (lists.length === 0) return;
+            let maxItems = 0;
+            lists.forEach(list => maxItems = Math.max(maxItems, list.querySelectorAll('.list-item').length));
+
+            lists.forEach(list => {
+                const isIndicatorList = list.closest('td').cellIndex === 1;
+                const items = list.querySelectorAll('.list-item');
+                const diff = maxItems - items.length;
+                for (let i = 0; i < diff; i++) {
+                    const newItem = document.createElement('div');
+                    newItem.className = 'list-item';
+                    newItem.contentEditable = "true";
+                    
+                    let prefixHtml = '';
+                    if (isIndicatorList && tr.dataset.prefix) {
+                        const count = list.querySelectorAll('.list-item').length;
+                        prefixHtml = `<span class="font-bold mr-1 text-blue-600 ind-prefix" contenteditable="false">${tr.dataset.prefix}.${count + 1}</span> `;
+                    }
+                    newItem.innerHTML = `<div class="en-text">${prefixHtml}</div><div class="lao-text">${prefixHtml}</div>`;
+                    list.appendChild(newItem);
+                }
+            });
+
+            for (let i = 0; i < maxItems; i++) {
+                let maxHeight = 0;
+                lists.forEach(list => { const item = list.querySelectorAll('.list-item')[i]; if (item) item.style.height = 'auto'; });
+                lists.forEach(list => { const item = list.querySelectorAll('.list-item')[i]; if (item) maxHeight = Math.max(maxHeight, item.offsetHeight); });
+                lists.forEach(list => { const item = list.querySelectorAll('.list-item')[i]; if (item) item.style.height = maxHeight + 'px'; });
+            }
+        }
+
+        function syncAllHeights() {
+            document.querySelectorAll('.logframe-table tr.sync-row').forEach(tr => syncRowHeights(tr));
+        }
+
+        function addItem(btn, usePrefix) {
+            const tr = btn.closest('tr');
+            const list = btn.closest('td').querySelector('.list-container');
+            const prefix = tr.dataset.prefix || '';
+            const count = list.querySelectorAll('.list-item').length;
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'list-item';
+            newItem.contentEditable = "true";
+            
+            let prefixHtml = '';
+            if (usePrefix && prefix) {
+                prefixHtml = `<span class="font-bold mr-1 text-blue-600 ind-prefix" contenteditable="false">${prefix}.${count + 1}</span> `;
+            }
+            
+            newItem.innerHTML = `<div class="en-text">${prefixHtml}</div><div class="lao-text">${prefixHtml}</div>`;
+            list.appendChild(newItem);
+            
+            syncRowHeights(tr);
+            
+            const currentItems = list.querySelectorAll('.list-item');
+            const focusItem = currentItems[currentItems.length - 1];
+            focusItem.focus();
+            const range = document.createRange();
+            const sel = window.getSelection();
+            if(focusItem.lastChild) {
+                range.selectNodeContents(focusItem.lastChild);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        }
+
+        function setupAutoNumbering() {
+            const logframeTable = document.querySelector('.logframe-table');
+            if (!logframeTable) return;
+            logframeTable.addEventListener('input', function(e) {
+                if (!e.target.classList.contains('editable-cell') && !e.target.classList.contains('list-item') && !e.target.classList.contains('en-text') && !e.target.classList.contains('lao-text')) return;
+                const cell = e.target.closest('td');
+                const row = e.target.closest('tr');
+                if (row.classList.contains('sync-row')) syncRowHeights(row);
+                
+                if (cell && cell.cellIndex === 0) {
+                    const text = cell.textContent.trim();
+                    const match = text.match(/([0-9]+(?:\.[0-9]+)*)/);
+                    if (match && match[1]) {
+                        const baseNumber = match[1];
+                        if (row.dataset.prefix !== baseNumber) {
+                            const indCell = row.cells[1];
+                            if (indCell) {
+                                indCell.querySelectorAll('.ind-prefix').forEach((prefixSpan) => {
+                                    prefixSpan.innerText = baseNumber + '.' + prefixSpan.innerText.split('.')[1];
+                                });
+                            }
+                            row.dataset.prefix = baseNumber;
+                        }
+                    }
+                }
+            });
+        }
+
+        function syncPlanningFromLogframe() {
+            const tbody = document.querySelector('.planning-table tbody');
+            if (!tbody) return;
+            
+            const existingData = {};
+            tbody.querySelectorAll('tr').forEach(tr => {
+                const key = tr.dataset.key;
+                if(key) {
+                    existingData[key] = {
+                        resp: tr.querySelector('.resp-cell') ? tr.querySelector('.resp-cell').innerHTML : '',
+                        start: tr.querySelector('.start-date') ? tr.querySelector('.start-date').value : '',
+                        end: tr.querySelector('.end-date') ? tr.querySelector('.end-date').value : ''
+                    };
+                }
+            });
+
+            tbody.innerHTML = '';
+            document.querySelectorAll('.logframe-table tr').forEach(row => {
+                const cell = row.cells[0];
+                if(!cell || !cell.classList.contains('editable-cell')) return;
+                const rawText = cell.textContent.trim();
+                const visibleHtml = cell.innerHTML;
+                if(!rawText) return;
+
+                if(isGoalRow(rawText) || isPurposeRow(rawText) || isOutputRow(rawText) || isActivityRow(rawText)) {
+                    let indent = 'font-bold bg-gray-100';
+                    let isActivity = false;
+                    
+                    if(isActivityRow(rawText)) {
+                        indent = 'pl-8 text-gray-700 bg-white';
+                        isActivity = true;
+                    }
+                    
+                    const key = rawText.substring(0, 50).replace(/\s/g, '');
+                    const prev = existingData[key] || {resp: '<div class="en-text"></div><div class="lao-text"></div>', start: '', end: ''};
+                    
+                    let dateCellsHtml = '';
+                    if (isActivity) {
+                        dateCellsHtml = `
+                            <td class="px-2 py-2 border-r text-center bg-white"><input type="date" class="start-date w-full bg-transparent outline-none text-[11px] text-gray-700 cursor-pointer" value="${prev.start}"></td>
+                            <td class="px-2 py-2 border-r text-center bg-white"><input type="date" class="end-date w-full bg-transparent outline-none text-[11px] text-gray-700 cursor-pointer" value="${prev.end}"></td>
+                        `;
+                    } else {
+                        dateCellsHtml = `
+                            <td class="px-2 py-2 border-r text-center bg-gray-100"></td>
+                            <td class="px-2 py-2 border-r text-center bg-gray-100"></td>
+                        `;
+                    }
+                    
+                    const tr = document.createElement('tr');
+                    tr.dataset.key = key;
+                    tr.className = 'border-b hover:bg-gray-50';
+                    tr.innerHTML = `
+                        <td class="px-4 py-2 border-r ${indent}">${visibleHtml}</td>
+                        <td class="px-4 py-2 border-r text-center ${isActivity ? 'editable-cell resp-cell bg-white' : 'bg-gray-100'}" contenteditable="${isActivity ? 'true' : 'false'}">${isActivity ? prev.resp : ''}</td>
+                        ${dateCellsHtml}
+                        <td class="px-1 py-2 border-r editable-cell ${isActivity ? 'bg-white' : 'bg-gray-100'}" contenteditable="${isActivity ? 'true' : 'false'}"></td>
+                        <td class="px-1 py-2 border-r editable-cell ${isActivity ? 'bg-white' : 'bg-gray-100'}" contenteditable="${isActivity ? 'true' : 'false'}"></td>
+                        <td class="px-1 py-2 border-r editable-cell ${isActivity ? 'bg-white' : 'bg-gray-100'}" contenteditable="${isActivity ? 'true' : 'false'}"></td>
+                        <td class="px-1 py-2 editable-cell ${isActivity ? 'bg-white' : 'bg-gray-100'}" contenteditable="${isActivity ? 'true' : 'false'}"></td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+        }
+
+        function syncBudget() {
+            const tbody = document.getElementById('budget-tbody');
+            if(!tbody) return;
+            
+            const existingBudget = {};
+            tbody.querySelectorAll('tr').forEach(tr => {
+                if(tr.dataset.key) {
+                    existingBudget[tr.dataset.key] = {
+                        unit: tr.cells[2]?.innerHTML || '',
+                        cost: tr.cells[3]?.innerText || '0',
+                        qty: tr.cells[4]?.innerText || '0'
+                    };
+                }
+            });
+
+            tbody.innerHTML = '';
+            let total = 0;
+            
+            document.querySelectorAll('.logframe-table tr').forEach(row => {
+                const cell = row.cells[0];
+                if(!cell || !cell.classList.contains('editable-cell')) return;
+                const rawText = cell.textContent.trim();
+                const visibleHtml = cell.innerHTML;
+                
+                if(isActivityRow(rawText)) {
+                    const resourceHtml = row.cells[1] ? row.cells[1].innerHTML : '';
+                    const key = rawText.substring(0, 50).replace(/\s/g, '');
+                    const prev = existingBudget[key] || {unit: '<div class="en-text">Lump sum</div><div class="lao-text">ເໝົາຈ່າຍ</div>', cost: '0', qty: '1'};
+                    
+                    const tr = document.createElement('tr');
+                    tr.dataset.key = key;
+                    tr.className = 'border-b hover:bg-gray-50';
+                    
+                    let costNum = parseFloat(prev.cost.replace(/,/g, '')) || 0;
+                    let qtyNum = parseFloat(prev.qty.replace(/,/g, '')) || 0;
+                    let rowTotal = costNum * qtyNum;
+                    total += rowTotal;
+
+                    tr.innerHTML = `
+                        <td class="px-4 py-2 border-r text-gray-700">${visibleHtml}</td>
+                        <td class="px-4 py-2 border-r text-gray-600">${resourceHtml}</td>
+                        <td class="px-4 py-2 border-r text-right editable-cell b-unit" contenteditable="true">${prev.unit}</td>
+                        <td class="px-4 py-2 border-r text-right editable-cell b-cost" contenteditable="true" oninput="calcBudgetRow(this)">${prev.cost}</td>
+                        <td class="px-4 py-2 border-r text-right editable-cell b-qty" contenteditable="true" oninput="calcBudgetRow(this)">${prev.qty}</td>
+                        <td class="px-4 py-2 text-right text-green-700 font-medium b-total">${rowTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+            
+            const gTotal = document.getElementById('budget-grand-total');
+            if(gTotal) gTotal.innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function calcBudgetRow(element) {
+            const tr = element.closest('tr');
+            const costStr = tr.querySelector('.b-cost').innerText.replace(/,/g, '');
+            const qtyStr = tr.querySelector('.b-qty').innerText.replace(/,/g, '');
+            const cost = parseFloat(costStr) || 0;
+            const qty = parseFloat(qtyStr) || 0;
+            const total = cost * qty;
+            tr.querySelector('.b-total').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2});
+            
+            let grandTotal = 0;
+            document.querySelectorAll('#tab-budget .b-total').forEach(td => {
+                grandTotal += parseFloat(td.innerText.replace(/,/g, '')) || 0;
+            });
+            const gTotal = document.getElementById('budget-grand-total');
+            if(gTotal) gTotal.innerText = grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function formatUnit(element) {
+            const tr = element.closest('tr');
+            if (!tr) return;
+            const select = tr.querySelector('.unit-type-selector');
+            if (!select) return;
+            const type = select.value;
+            let text = element.innerText.trim();
+            if (!text || text === '-') return;
+            
+            let hasNumber = text.match(/[\d\.]+/);
+            if (!hasNumber) return;
+
+            if (type === 'pct') {
+                if (!text.includes('%')) element.innerText = text + '%';
+            } else {
+                if (text.includes('%')) element.innerText = text.replace(/%/g, '');
+            }
+            
+            if(element.classList.contains('yearly-actual')) calcYearlyActuals(element);
+            else if (element.classList.contains('track-target') || element.classList.contains('track-actual')) calcProgress(element);
+        }
+
+        function changeUnitType(select) {
+            select.querySelectorAll('option').forEach(opt => opt.removeAttribute('selected'));
+            select.querySelector(`option[value="${select.value}"]`).setAttribute('selected', 'selected');
+
+            const tr = select.closest('tr');
+            tr.querySelectorAll('.format-num').forEach(td => formatUnit(td));
+            
+            const trackActual = tr.querySelector('.track-actual');
+            if(trackActual) calcProgress(trackActual);
+        }
+
+        function addTrackingYear() {
+            trackingYearCount++;
+            const theadTr = document.querySelector('.tracking-table thead tr');
+            const actualOverallTh = theadTr.querySelector('.th-actual-overall');
+            
+            const targetText = dict[currentLang]['th-target-small'];
+            const actualText = dict[currentLang]['th-actual-small'];
+            const yearId = `year-header-${trackingYearCount}`;
+            
+            const thT = document.createElement('th');
+            thT.className = 'px-4 py-3 font-semibold text-gray-700 border-r w-24 text-center bg-blue-50 align-top';
+            thT.innerHTML = `
+                <div id="${yearId}-target" class="editable-cell mb-1 pb-1 border-b border-blue-200 text-blue-800" contenteditable="true" title="ກົດເພື່ອປ່ຽນຊື່ປີ" oninput="syncYearHeader('${yearId}', this.innerText, 'target')">Year ${trackingYearCount}</div>
+                <div class="text-[11px] uppercase tracking-wider text-blue-600" data-i18n="th-target-small">${targetText}</div>
+            `;
+            
+            const thA = document.createElement('th');
+            thA.className = 'px-4 py-3 font-semibold text-gray-700 border-r w-24 text-center bg-green-50 align-top';
+            thA.innerHTML = `
+                <div id="${yearId}-actual" class="editable-cell mb-1 pb-1 border-b border-green-200 text-green-800" contenteditable="true" title="ກົດເພື່ອປ່ຽນຊື່ປີ" oninput="syncYearHeader('${yearId}', this.innerText, 'actual')">Year ${trackingYearCount}</div>
+                <div class="text-[11px] uppercase tracking-wider text-green-600" data-i18n="th-actual-small">${actualText}</div>
+            `;
+
+            theadTr.insertBefore(thT, actualOverallTh);
+            theadTr.insertBefore(thA, actualOverallTh);
+
+            const tbody = document.getElementById('tracking-tbody');
+            tbody.querySelectorAll('tr').forEach(tr => {
+                if (tr.cells.length === 1 && tr.cells[0].hasAttribute('colspan')) {
+                    let cs = parseInt(tr.cells[0].getAttribute('colspan'));
+                    tr.cells[0].setAttribute('colspan', cs + 2);
+                } 
+                else if (tr.classList.contains('indicator-row-track')) {
+                    const actualTd = tr.querySelector('.track-actual');
+                    
+                    const tdT = document.createElement('td');
+                    tdT.className = `px-4 py-2 border-r text-center editable-cell yearly-target bg-blue-50/30 format-num`;
+                    tdT.contentEditable = "true";
+                    tdT.onblur = function() { formatUnit(this); };
+                    
+                    const tdA = document.createElement('td');
+                    tdA.className = `px-4 py-2 border-r text-center editable-cell yearly-actual bg-green-50/30 format-num`;
+                    tdA.contentEditable = "true";
+                    tdA.oninput = function() { calcYearlyActuals(this); };
+                    tdA.onblur = function() { formatUnit(this); };
+
+                    tr.insertBefore(tdT, actualTd);
+                    tr.insertBefore(tdA, actualTd);
+                }
+            });
+        }
+
+        function syncYearHeader(yearId, text, source) {
+            if (source === 'target') {
+                const actualEl = document.getElementById(`${yearId}-actual`);
+                if (actualEl && actualEl.innerText !== text) actualEl.innerText = text;
+            } else {
+                const targetEl = document.getElementById(`${yearId}-target`);
+                if (targetEl && targetEl.innerText !== text) targetEl.innerText = text;
+            }
+        }
+
+        function calcYearlyActuals(element) {
+            const tr = element.closest('tr');
+            let sum = 0;
+            let hasValue = false;
+            
+            tr.querySelectorAll('.yearly-actual').forEach(td => {
+                let text = td.innerText.replace(/,/g, '');
+                let match = text.match(/[\d\.]+/);
+                if (match) {
+                    sum += parseFloat(match[0]);
+                    hasValue = true;
+                }
+            });
+            
+            if(hasValue) {
+                const overallActualTd = tr.querySelector('.track-actual');
+                const select = tr.querySelector('.unit-type-selector');
+                const isPercent = select && select.value === 'pct';
+                
+                overallActualTd.innerText = sum + (isPercent ? '%' : '');
+                calcProgress(overallActualTd); 
+            }
+        }
+
+        function syncTracking() {
+            const logframeTable = document.querySelector('.logframe-table');
+            const trackingTbody = document.getElementById('tracking-tbody');
+            if (!logframeTable || !trackingTbody) return;
+
+            const existingData = {};
+            trackingTbody.querySelectorAll('tr.indicator-row-track').forEach(tr => {
+                const titleKey = tr.dataset.key;
+                if (titleKey) {
+                    const yearlyData = [];
+                    const yTargets = tr.querySelectorAll('.yearly-target');
+                    const yActuals = tr.querySelectorAll('.yearly-actual');
+                    for(let i=0; i < yTargets.length; i++){
+                        yearlyData.push({
+                            target: yTargets[i].innerText.trim(),
+                            actual: yActuals[i].innerText.trim()
+                        });
+                    }
+
+                    existingData[titleKey] = {
+                        unitType: tr.querySelector('.unit-type-selector') ? tr.querySelector('.unit-type-selector').value : 'num',
+                        baseline: tr.querySelector('.track-baseline') ? tr.querySelector('.track-baseline').innerText.trim() : '',
+                        target: tr.querySelector('.track-target').innerText.trim(),
+                        actual: tr.querySelector('.track-actual').innerText.trim(),
+                        progress: tr.querySelector('.track-progress').innerText.trim(),
+                        progressClass: tr.querySelector('.track-progress').className,
+                        notes: tr.cells[tr.cells.length-1].innerHTML,
+                        yearly: yearlyData
+                    };
+                }
+            });
+
+            trackingTbody.innerHTML = '';
+            let hasData = false;
+            const colspanTotal = 7 + (trackingYearCount * 2);
+
+            logframeTable.querySelectorAll('tr').forEach(row => {
+                const cell = row.cells[0];
+                if (!cell || !cell.classList.contains('editable-cell')) return;
+                
+                const rawText = cell.textContent.trim();
+                const visibleHtml = cell.innerHTML;
+                if (!rawText) return;
+
+                let isHeader = false;
+                let indentClass = '';
+                let bgColor = '';
+
+                if (isGoalRow(rawText)) {
+                    indentClass = 'font-bold text-blue-900'; bgColor = 'bg-blue-100'; isHeader = true;
+                } else if (isOutputRow(rawText)) {
+                    indentClass = 'font-semibold pl-8 text-blue-800'; bgColor = 'bg-blue-50'; isHeader = true;
+                } else if (isPurposeRow(rawText)) {
+                    indentClass = 'font-bold pl-4'; bgColor = 'bg-gray-200'; isHeader = true;
+                }
+
+                if (isHeader) {
+                    const trHeader = document.createElement('tr');
+                    trHeader.innerHTML = `<td class="px-4 py-2 border-r ${indentClass} ${bgColor}" colspan="${colspanTotal}">${visibleHtml}</td>`;
+                    trackingTbody.appendChild(trHeader);
+
+                    const indCell = row.cells[1];
+                    if (indCell) {
+                        indCell.querySelectorAll('.list-item').forEach(item => {
+                            const rawIndText = item.textContent.trim();
+                            const visibleIndHtml = item.innerHTML;
+
+                            if (rawIndText) {
+                                const dataKey = rawText.substring(0, 50).replace(/\s/g, '') + '_' + rawIndText.substring(0, 50).replace(/\s/g, '');
+                                const prev = existingData[dataKey] || { unitType: 'num', baseline: '', target: '', actual: '', progress: '-', progressClass: 'px-4 py-2 border-r text-center font-bold text-gray-400 track-progress', notes: '<div class="en-text"></div><div class="lao-text"></div>', yearly: [] };
+
+                                let yearlyCellsHtml = '';
+                                for(let i=0; i<trackingYearCount; i++) {
+                                    const yD = prev.yearly[i] || {target: '', actual: ''};
+                                    yearlyCellsHtml += `
+                                        <td class="px-4 py-2 border-r text-center editable-cell yearly-target bg-blue-50/30 format-num" contenteditable="true" onblur="formatUnit(this)">${yD.target}</td>
+                                        <td class="px-4 py-2 border-r text-center editable-cell yearly-actual bg-green-50/30 format-num" contenteditable="true" oninput="calcYearlyActuals(this)" onblur="formatUnit(this)">${yD.actual}</td>
+                                    `;
+                                }
+
+                                const trInd = document.createElement('tr');
+                                trInd.className = 'border-b hover:bg-gray-50 transition-colors indicator-row-track';
+                                trInd.dataset.key = dataKey;
+                                
+                                trInd.innerHTML = `
+                                    <td class="px-4 py-2 border-r pl-12 text-gray-700">${visibleIndHtml}</td>
+                                    <td class="px-2 py-2 border-r text-center align-middle bg-gray-50">
+                                        <select class="unit-type-selector text-xs bg-white border border-gray-300 rounded p-1 text-gray-700 outline-none focus:border-blue-400 cursor-pointer" onchange="changeUnitType(this)">
+                                            <option value="num" ${prev.unitType === 'num' ? 'selected' : ''}>#</option>
+                                            <option value="pct" ${prev.unitType === 'pct' ? 'selected' : ''}>%</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-4 py-2 border-r text-center editable-cell track-baseline format-num" contenteditable="true" onblur="formatUnit(this)">${prev.baseline}</td>
+                                    <td class="px-4 py-2 border-r text-center editable-cell track-target format-num font-bold bg-purple-50/50" contenteditable="true" oninput="calcProgress(this)" onblur="formatUnit(this)">${prev.target}</td>
+                                    ${yearlyCellsHtml}
+                                    <td class="px-4 py-2 border-r text-center editable-cell track-actual format-num font-bold bg-purple-50/50" contenteditable="true" oninput="calcProgress(this)" onblur="formatUnit(this)">${prev.actual}</td>
+                                    <td class="${prev.progressClass}">${prev.progress}</td>
+                                    <td class="px-4 py-2 editable-cell" contenteditable="true">${prev.notes}</td>
+                                `;
+                                trackingTbody.appendChild(trInd);
+                                hasData = true;
+                            }
+                        });
+                    }
+                }
+            });
+
+            if (!hasData) {
+                trackingTbody.innerHTML = `<tr><td colspan="${colspanTotal}" class="text-center py-6 text-gray-500 italic">ບໍ່ມີຂໍ້ມູນຕົວຊີ້ວັດ ກະລຸນາເພີ່ມໃນ Logframe ກ່ອນ...</td></tr>`;
+            }
+        }
+
+        function calcProgress(element) {
+            const tr = element.closest('tr');
+            let targetStr = tr.querySelector('.track-target').innerText.replace(/,/g, '');
+            let actualStr = tr.querySelector('.track-actual').innerText.replace(/,/g, '');
+            
+            let targetMatch = targetStr.match(/[\d\.]+/);
+            let actualMatch = actualStr.match(/[\d\.]+/);
+            
+            let progressCell = tr.querySelector('.track-progress');
+            
+            if (targetMatch && actualMatch) {
+                let target = parseFloat(targetMatch[0]);
+                let actual = parseFloat(actualMatch[0]);
+                
+                if (target > 0) {
+                    let percent = Math.round((actual / target) * 100);
+                    progressCell.innerText = percent + '%';
+                    
+                    if (percent >= 100) progressCell.className = 'px-4 py-2 border-r text-center font-bold text-green-600 track-progress';
+                    else if (percent >= 50) progressCell.className = 'px-4 py-2 border-r text-center font-bold text-blue-600 track-progress';
+                    else progressCell.className = 'px-4 py-2 border-r text-center font-bold text-orange-500 track-progress';
+                } else {
+                    progressCell.innerText = '0%';
+                }
+            } else {
+                progressCell.innerText = '-';
+                progressCell.className = 'px-4 py-2 border-r text-center font-bold text-gray-400 track-progress';
+            }
+        }
+
+        // Global Bindings for HTML onclick listeners
+        window.setLanguage = setLanguage;
+        window.saveAsHTML = saveAsHTML;
+        window.saveAsJSON = saveAsJSON;
+        window.importJSON = importJSON;
+        window.execCmd = execCmd;
+        window.switchTab = switchTab;
+        window.addItem = addItem;
+        window.calcBudgetRow = calcBudgetRow;
+        window.formatUnit = formatUnit;
+        window.changeUnitType = changeUnitType;
+        window.addTrackingYear = addTrackingYear;
+        window.syncYearHeader = syncYearHeader;
+        window.calcYearlyActuals = calcYearlyActuals;
+        window.syncPlanningFromLogframe = syncPlanningFromLogframe;
+        window.syncBudget = syncBudget;
+        window.syncTracking = syncTracking;
+        window.calcProgress = calcProgress;
+        window.updateCustomHeader = updateCustomHeader;
+        window.openExportModal = openExportModal;
+        window.closeExportModal = closeExportModal;
+        window.confirmExport = confirmExport;
+        window.saveToCache = saveToCache;
+        window.loadFromCache = loadFromCache;
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('logframe');
+            setLanguage('lo');
+            setupAutoNumbering();
+            setTimeout(syncAllHeights, 100);
+            
+            // Start Firebase setup (Rule 3)
+            initFirebase();
+        });
     </script>
 </body>
 </html>
